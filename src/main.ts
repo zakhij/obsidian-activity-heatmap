@@ -1,16 +1,11 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
+import type { ActivityHeatmapSettings } from './types'
 
-interface MyPluginSettings {
-	mySetting: string;
-}
+import { DEFAULT_SETTINGS } from './constants'
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
-
-export default class ActivityHeatmap extends Plugin {
-	settings: MyPluginSettings;
+export default class ActivityHeatmapPlugin extends Plugin {
+	settings: ActivityHeatmapSettings;
 
 	async onload() {
 
@@ -33,28 +28,4 @@ export default class ActivityHeatmap extends Plugin {
 
 
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: ActivityHeatmap;
 
-	constructor(app: App, plugin: ActivityHeatmap) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
-}
