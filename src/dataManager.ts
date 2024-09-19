@@ -1,14 +1,13 @@
-import type { ActivityHeatmapData, CheckpointData, ActivityData, ActivityValues, Checkpoints } from './types'
+import type { MetricData, AllMetricData, ActivityHeatmapData } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 
 // Abstract class
 export abstract class MetricManager {
-    protected metricName: string;
+    public metricName: string;
     constructor() {}
 
-    abstract calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: CheckpointData; activity: ActivityData };
-
+    abstract calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: MetricData; activity: MetricData };
 }
 
 // Subclass for File Size
@@ -19,7 +18,7 @@ export class FileSizeDataManager extends MetricManager {
         
     }
 
-    calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: CheckpointData; activity: ActivityData } {
+    calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: MetricData; activity: MetricData } {
         // Implement file size calculation
     }
 }
@@ -31,7 +30,7 @@ export class WordCountDataManager extends MetricManager {
         this.metricName = 'wordCount';
     }
 
-    calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: CheckpointData; activity: ActivityData } {
+    calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: MetricData; activity: MetricData } {
         // Implement word count calculation
     }
     
@@ -66,9 +65,10 @@ export class ActivityHeatmapDataManager {
     // Update Metrics
     updateMetrics() {
         const today = new Date().toISOString().split('T')[0];
-        //TODO: Call calculateMetrics for each metric manager and update the data
         for (const manager of this.metricManagers) {
             const { checkpoint, activity } = manager.calculateMetrics(this.files, this.data, today);
+            this.data.checkpoints[manager.metricName] = checkpoint;
+            this.data.activityOverTime[manager.metricName] = activity;
         }
     }
 }

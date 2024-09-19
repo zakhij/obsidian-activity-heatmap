@@ -1,29 +1,14 @@
-
-
-
-export interface CheckpointData {
-    [metricName: string]: {
-        [filePath: string]: number
-    }
+export interface MetricData {
+    [key: string]: number
 }
 
-export interface ActivityData {
-    [metricName: string]: {
-        [date: string]: number
-    }
-}
-
-export interface Checkpoints {
-    [key: string]: CheckpointData
-}
-
-export interface ActivityValues {
-    [key: string]: ActivityData
+export interface AllMetricData {
+    [metricName: string]: MetricData
 }
 
 export interface ActivityHeatmapData {
-    checkpoints: Checkpoints;
-    activityOverTime: ActivityValues;
+    checkpoints: AllMetricData;
+    activityOverTime: AllMetricData;
 }
 
 export interface ActivityHeatmapSettings{
