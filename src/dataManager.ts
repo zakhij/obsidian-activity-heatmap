@@ -23,8 +23,18 @@ abstract class MetricManager {
             }
         }
 
-        activity[dateToday] = absoluteDifferenceSum;
+        // Update or create activity entry for today
+        if (latestData.activityOverTime[this.metricName] && latestData.activityOverTime[this.metricName][dateToday] !== undefined) {
+            activity[dateToday] = latestData.activityOverTime[this.metricName][dateToday] + absoluteDifferenceSum;
+        } else {
+            activity[dateToday] = absoluteDifferenceSum;
+        }
 
+        // Merge the new activity data with existing data
+        if (latestData.activityOverTime[this.metricName]) {
+            Object.assign(activity, latestData.activityOverTime[this.metricName]);
+        }
+        console.log({ checkpoint, activity });
         return { checkpoint, activity };
     }
 }
@@ -75,6 +85,7 @@ export class ActivityHeatmapDataManager {
 
     async updateMetrics() {
         const today = new Date().toISOString().split('T')[0];
+        await this.loadData();
         for (const manager of this.metricManagers) {
             const { checkpoint, activity } = await manager.calculateMetrics(this.files, this.data, today);
             this.data.checkpoints[manager.metricName] = checkpoint;

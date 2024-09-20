@@ -1,16 +1,22 @@
 import { App, Plugin } from 'obsidian';
 import type { ActivityHeatmapSettings } from './types'
-import { DataManager } from './dataManager'
+import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
 
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
-	dataManager: DataManager;
+	dataManager: ActivityHeatmapDataManager;
 
 	async onload() {
 		await this.loadSettings();
-		this.dataManager = new DataManager(this);
-		await this.dataManager.loadData();
+		this.dataManager = new ActivityHeatmapDataManager(this);
+		
+		// Set up an interval to update metrics periodically
+		this.registerInterval(
+			window.setInterval(() => {
+				this.dataManager.updateMetrics();
+			}, 1 * 60 * 1000) // Placeholder: Convert minutes to milliseconds
+		);
 	}
 
 	async onunload() {
