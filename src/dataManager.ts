@@ -1,43 +1,55 @@
-import type { MetricData, AllMetricData, ActivityHeatmapData } from './types'
+import type { ActivityHeatmapData, CheckpointData, ActivityData } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 
-// Abstract class
-export abstract class MetricManager {
-    public metricName: string;
-    constructor() {}
+abstract class MetricManager {
+    constructor(protected plugin: ActivityHeatmapPlugin, public metricName: string) {}
 
-    abstract calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: MetricData; activity: MetricData };
+    abstract getMetricValue(file: TFile): number | Promise<number>;
+
+    async calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
+        const checkpoint: CheckpointData = {};
+        const activity: ActivityData = {};
+        let absoluteDifferenceSum = 0;
+
+        for (const file of files) {
+            const metricValue = await Promise.resolve(this.getMetricValue(file));
+            checkpoint[file.path] = metricValue;
+
+            if (latestData.checkpoints[this.metricName] && latestData.checkpoints[this.metricName][file.path] !== undefined) {
+                absoluteDifferenceSum += Math.abs(metricValue - latestData.checkpoints[this.metricName][file.path]);
+            } else {
+                absoluteDifferenceSum += metricValue;
+            }
+        }
+
+        activity[dateToday] = absoluteDifferenceSum;
+
+        return { checkpoint, activity };
+    }
 }
 
-// Subclass for File Size
-export class FileSizeDataManager extends MetricManager {
-    constructor() {
-        super();
-        this.metricName = 'fileSize';
-        
+class FileSizeDataManager extends MetricManager {
+    constructor(plugin: ActivityHeatmapPlugin) {
+        super(plugin, 'fileSize');
     }
 
-    calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: MetricData; activity: MetricData } {
-        // Implement file size calculation
+    getMetricValue(file: TFile): number {
+        return file.stat.size;
     }
 }
 
-// Subclass for Word Count
-export class WordCountDataManager extends MetricManager {
-    constructor() {
-        super();
-        this.metricName = 'wordCount';
+class WordCountDataManager extends MetricManager {
+    constructor(plugin: ActivityHeatmapPlugin) {
+        super(plugin, 'wordCount');
     }
 
-    calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): { checkpoint: MetricData; activity: MetricData } {
-        // Implement word count calculation
+    async getMetricValue(file: TFile): Promise<number> {
+        const content = await this.plugin.app.vault.read(file);
+        return content.split(/\s+/).length;
     }
-    
 }
 
-
-// Class Activity Heatmap Data Manager
 export class ActivityHeatmapDataManager {
     private data: ActivityHeatmapData;
     private metricManagers: MetricManager[];
@@ -46,14 +58,13 @@ export class ActivityHeatmapDataManager {
     constructor(private plugin: ActivityHeatmapPlugin) {
         this.data = { checkpoints: {}, activityOverTime: {} };
         this.metricManagers = [
-            new FileSizeDataManager(),
-            new WordCountDataManager()
+            new FileSizeDataManager(plugin),
+            new WordCountDataManager(plugin)
         ];
 
         this.files = this.plugin.app.vault.getMarkdownFiles();
     }
 
-    // Load Data
     async loadData() {
         this.data = await this.plugin.loadData() || { checkpoints: {}, activityOverTime: {} };
     }
@@ -62,13 +73,13 @@ export class ActivityHeatmapDataManager {
         await this.plugin.saveData(this.data);
     }
 
-    // Update Metrics
-    updateMetrics() {
+    async updateMetrics() {
         const today = new Date().toISOString().split('T')[0];
         for (const manager of this.metricManagers) {
-            const { checkpoint, activity } = manager.calculateMetrics(this.files, this.data, today);
+            const { checkpoint, activity } = await manager.calculateMetrics(this.files, this.data, today);
             this.data.checkpoints[manager.metricName] = checkpoint;
             this.data.activityOverTime[manager.metricName] = activity;
         }
+        await this.saveData();
     }
 }
