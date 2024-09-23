@@ -9,33 +9,30 @@ abstract class MetricManager {
 
     async calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
         const checkpoint: CheckpointData = {};
-        const activity: ActivityData = {};
+        const activity: ActivityData = { ...latestData.activityOverTime[this.metricName] };
         let absoluteDifferenceSum = 0;
 
-        for (const file of files) {
-            const metricValue = await Promise.resolve(this.getMetricValue(file));
-            checkpoint[file.path] = metricValue;
+        try {
+            for (const file of files) {
+                const metricValue = await this.getMetricValue(file);
+                checkpoint[file.path] = metricValue;
 
-            if (latestData.checkpoints[this.metricName] && latestData.checkpoints[this.metricName][file.path] !== undefined) {
-                absoluteDifferenceSum += Math.abs(metricValue - latestData.checkpoints[this.metricName][file.path]);
-            } else {
-                absoluteDifferenceSum += metricValue;
+                const previousValue = latestData.checkpoints[this.metricName]?.[file.path];
+                if (previousValue !== undefined) {
+                    absoluteDifferenceSum += Math.abs(metricValue - previousValue);
+                } else {
+                    absoluteDifferenceSum += metricValue;
+                }
             }
-        }
 
-        // Update or create activity entry for today
-        if (latestData.activityOverTime[this.metricName] && latestData.activityOverTime[this.metricName][dateToday] !== undefined) {
-            activity[dateToday] = latestData.activityOverTime[this.metricName][dateToday] + absoluteDifferenceSum;
-        } else {
-            activity[dateToday] = absoluteDifferenceSum;
-        }
+            // Update or create activity entry for today
+            activity[dateToday] = (activity[dateToday] || 0) + absoluteDifferenceSum;
 
-        // Merge the new activity data with existing data
-        if (latestData.activityOverTime[this.metricName]) {
-            Object.assign(activity, latestData.activityOverTime[this.metricName]);
+            return { checkpoint, activity };
+        } catch (error) {
+            console.error(`Error calculating ${this.metricName}:`, error);
+            throw error;
         }
-        console.log({ checkpoint, activity });
-        return { checkpoint, activity };
     }
 }
 
@@ -54,6 +51,7 @@ class WordCountDataManager extends MetricManager {
         super(plugin, 'wordCount');
     }
 
+    //Rather trivial implementation, but it's a start
     async getMetricValue(file: TFile): Promise<number> {
         const content = await this.plugin.app.vault.read(file);
         return content.split(/\s+/).length;
@@ -63,7 +61,6 @@ class WordCountDataManager extends MetricManager {
 export class ActivityHeatmapDataManager {
     private data: ActivityHeatmapData;
     private metricManagers: MetricManager[];
-    private files: TFile[];
 
     constructor(private plugin: ActivityHeatmapPlugin) {
         this.data = { checkpoints: {}, activityOverTime: {} };
@@ -71,8 +68,6 @@ export class ActivityHeatmapDataManager {
             new FileSizeDataManager(plugin),
             new WordCountDataManager(plugin)
         ];
-
-        this.files = this.plugin.app.vault.getMarkdownFiles();
     }
 
     async loadData() {
@@ -86,8 +81,13 @@ export class ActivityHeatmapDataManager {
     async updateMetrics() {
         const today = new Date().toISOString().split('T')[0];
         await this.loadData();
+
+        // Get the files here, right before we use them
+        const files = this.plugin.app.vault.getMarkdownFiles();
+        console.log("Number of files:", files.length);
+
         for (const manager of this.metricManagers) {
-            const { checkpoint, activity } = await manager.calculateMetrics(this.files, this.data, today);
+            const { checkpoint, activity } = await manager.calculateMetrics(files, this.data, today);
             this.data.checkpoints[manager.metricName] = checkpoint;
             this.data.activityOverTime[manager.metricName] = activity;
         }
