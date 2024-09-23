@@ -7,28 +7,34 @@ abstract class MetricManager {
 
     abstract getMetricValue(file: TFile): number | Promise<number>;
 
-    async calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
+    async calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData}> {
         const checkpoint: CheckpointData = {};
         const activity: ActivityData = { ...latestData.activityOverTime[this.metricName] };
         let absoluteDifferenceSum = 0;
+        const isFirstCheckpoint = !latestData.checkpoints[this.metricName] || Object.keys(latestData.checkpoints[this.metricName]).length === 0;
 
         try {
             for (const file of files) {
                 const metricValue = await this.getMetricValue(file);
                 checkpoint[file.path] = metricValue;
 
-                const previousValue = latestData.checkpoints[this.metricName]?.[file.path];
-                if (previousValue !== undefined) {
-                    absoluteDifferenceSum += Math.abs(metricValue - previousValue);
-                } else {
-                    absoluteDifferenceSum += metricValue;
+                if (!isFirstCheckpoint) {
+                    const previousValue = latestData.checkpoints[this.metricName]?.[file.path];
+                    if (previousValue !== undefined) {
+                        absoluteDifferenceSum += Math.abs(metricValue - previousValue);
+                    } else {
+                        // New file, count its full value as activity
+                        absoluteDifferenceSum += metricValue;
+                    }
                 }
             }
 
-            // Update or create activity entry for today
-            activity[dateToday] = (activity[dateToday] || 0) + absoluteDifferenceSum;
+            // Update activity only if it's not the first checkpoint
+            if (!isFirstCheckpoint) {
+                activity[dateToday] = (activity[dateToday] || 0) + absoluteDifferenceSum;
+            }
 
-            return { checkpoint, activity };
+            return { checkpoint, activity};
         } catch (error) {
             console.error(`Error calculating ${this.metricName}:`, error);
             throw error;
