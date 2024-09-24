@@ -1,7 +1,9 @@
-# Obsidian Sample Plugin
+# Obsidian Activity Heatmap Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+This is a custom plugin for Obsidian (https://obsidian.md). Proper README coming soon.
 
+
+----------------------------------------------------------------------------------------------------
 This project uses TypeScript to provide type checking and documentation.
 The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
 
