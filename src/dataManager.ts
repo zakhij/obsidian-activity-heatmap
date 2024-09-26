@@ -1,7 +1,7 @@
 import type { ActivityHeatmapData} from './types'
 import type ActivityHeatmapPlugin from './main'
 import { MetricManager, FileSizeDataManager, WordCountDataManager } from './metricManager';
-
+import { ActivityData } from './types';
 
 
 export class ActivityHeatmapDataManager {
@@ -40,8 +40,29 @@ export class ActivityHeatmapDataManager {
         await this.saveData();
     }
 
-    async getActivityHeatmapData(): Promise<ActivityHeatmapData> {
+    //TODO: Change this such that we're returning data for the selected metric (param), and
+    // only the activity over time data.
+    async getActivityHeatmapData(useMockData: boolean, metricType: string): Promise<ActivityData> {
+        if (useMockData) {
+            return this.createMockData();
+        }
         await this.loadData();
-        return this.data;
+        return this.data.activityOverTime[metricType];
     }
+
+
+    private createMockData(): ActivityData {
+        const startDate = new Date('2024-03-01');
+        const endDate = new Date('2024-09-01');
+        const mockData: ActivityData = {};
+
+        for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
+            const dateString = date.toISOString().split('T')[0];
+            mockData[dateString] = Math.floor(Math.random() * 100);
+        }
+
+        return mockData;
+    }
+
+
 }

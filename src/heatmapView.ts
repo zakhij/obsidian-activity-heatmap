@@ -1,14 +1,21 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
-import { HeatmapController } from './heatmapController';
+import { Heatmap } from './heatmap';
+import  ActivityHeatmapPlugin from './main';
+import { ActivityData } from './types';
 
 export const VIEW_TYPE_HEATMAP = 'heatmap-view';
 
 export class HeatmapView extends ItemView {
-    private heatmapController: HeatmapController;
+    private heatmap: Heatmap;
+    private plugin: ActivityHeatmapPlugin;
+    private useMockData: boolean;
 
-    constructor(leaf: WorkspaceLeaf, heatmapController: HeatmapController) {
+    constructor(leaf: WorkspaceLeaf, plugin: ActivityHeatmapPlugin, useMockData: boolean) {
         super(leaf);
-        this.heatmapController = heatmapController;
+        this.plugin = plugin;
+        this.heatmap = new Heatmap();
+        this.useMockData = useMockData;
+
     }
 
     getViewType() {
@@ -21,7 +28,17 @@ export class HeatmapView extends ItemView {
 
     async onOpen() {
         const container = this.containerEl.children[1];
-        await this.heatmapController.updateHeatmap();
+        container.empty();
+        const heatmapContainer = container.createEl('div', { attr: { id: 'heatmap-container' } });
+        
+        this.heatmap.setContainer(heatmapContainer);
+        this.heatmap.render(await this.getHeatmapData());
+
+    }
+
+    async getHeatmapData(): Promise<ActivityData> {
+        const metricType = this.plugin.settings.metricType;
+        return this.plugin.dataManager.getActivityHeatmapData(this.useMockData, metricType);
     }
 
     async onClose() {
