@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { Plugin, ViewStateResult, WorkspaceLeaf } from 'obsidian';
 import type { ActivityHeatmapSettings } from './types'
 import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
@@ -25,26 +25,20 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		// Register the custom view
 		this.registerView(
 			VIEW_TYPE_HEATMAP,
-			(leaf: WorkspaceLeaf) => new HeatmapView(leaf, this, false)
+			(leaf: WorkspaceLeaf) => new HeatmapView(leaf, this)
 		);
 
 		// Add ribbon icon and command to access the heatmap
 		this.addRibbonIcon('calendar', 'Activity Heatmap', () => {
-			this.activateView(false);
+			this.activateView();
 		});
 
 		this.addCommand({
 			id: 'open-activity-heatmap',
 			name: 'Open Activity Heatmap',
-			callback: () => this.activateView(false),
+			callback: () => this.activateView(),
 		});
 
-		// Add command to test mock heatmap
-		this.addCommand({
-			id: 'test-mock-heatmap',
-			name: 'Test Mock Heatmap',
-			callback: () => this.activateView(true),
-		});
 	}
 
 	async onunload() {
@@ -83,19 +77,23 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		});
 	}
 
-	async activateView(useMockData: boolean) {
+	async activateView() {
+		console.log("Activating view");
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_HEATMAP);
 
 		await this.app.workspace.getRightLeaf(false)?.setViewState({
 			type: VIEW_TYPE_HEATMAP,
 			active: true,
-			state: { useMockData: useMockData }
 		});
-
+		
 		this.app.workspace.revealLeaf(
 			this.app.workspace.getLeavesOfType(VIEW_TYPE_HEATMAP)[0]
 		);
+		console.log("View activated");
+		
+		
 	}
+
 }
 
 

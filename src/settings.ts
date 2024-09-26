@@ -46,6 +46,15 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
 				})
 			);
 
-		
+		new Setting(containerEl)
+			.setName('Use Mock Data')
+			.setDesc('Toggle to use mock data for the heatmap. FOR DEV TESTING.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.useMockData)
+				.onChange(async (value) => {
+					this.plugin.settings.useMockData = value as boolean;
+					await this.plugin.saveSettings();
+				})
+			);
 	}
 }

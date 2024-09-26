@@ -44,6 +44,7 @@ export class ActivityHeatmapDataManager {
     // only the activity over time data.
     async getActivityHeatmapData(useMockData: boolean, metricType: string): Promise<ActivityData> {
         if (useMockData) {
+            console.log("Using mock data");
             return this.createMockData();
         }
         await this.loadData();
