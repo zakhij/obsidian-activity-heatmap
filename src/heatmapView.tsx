@@ -1,18 +1,22 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
-import { Heatmap } from './heatmap';
 import ActivityHeatmapPlugin from './main';
 import { ActivityData } from './types';
+import * as React from 'react';
+import { Root, createRoot } from "react-dom/client";
+import  Heatmap  from './heatmap';
 
 export const VIEW_TYPE_HEATMAP = 'heatmap-view';
 
 export class HeatmapView extends ItemView {
-    private heatmap: Heatmap;
+
     private plugin: ActivityHeatmapPlugin;
+    private root: Root | null = null;
+
 
     constructor(leaf: WorkspaceLeaf, plugin: ActivityHeatmapPlugin) {
         super(leaf);
         this.plugin = plugin;
-        this.heatmap = new Heatmap();
+
     }
 
     getViewType() {
@@ -25,12 +29,11 @@ export class HeatmapView extends ItemView {
 
     async onOpen() {
         console.log("Opening heatmap view, using mock data:", this.plugin.settings.useMockData);
-        const container = this.containerEl.children[1];
-        container.empty();
-        const heatmapContainer = container.createEl('div', { attr: { id: 'heatmap-container' } });
+        const root = createRoot(this.containerEl.children[1]);
         
-        this.heatmap.setContainer(heatmapContainer);
-        this.heatmap.render(await this.getHeatmapData());
+        const data = await this.getHeatmapData();
+        root.render(<Heatmap data={data} />);
+
     }
 
     async getHeatmapData(): Promise<ActivityData> {

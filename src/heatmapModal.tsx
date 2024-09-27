@@ -1,40 +1,32 @@
 import { App, Modal } from 'obsidian';
-import { Heatmap } from './heatmap';
 import { ActivityData } from './types';
 import  ActivityHeatmapPlugin  from './main';
+import * as React from 'react';
+import { Root, createRoot } from "react-dom/client";
+import  Heatmap  from './heatmap';
 
 export class HeatmapModal extends Modal {
-    private heatmap: Heatmap;
+    private root: Root | null = null;
     private plugin: ActivityHeatmapPlugin;
 
     constructor(app: App, plugin: ActivityHeatmapPlugin) {
         super(app);
-        this.heatmap = new Heatmap();
         this.plugin = plugin;
 
     }
 
     async onOpen() {
-        const {contentEl} = this;
-        contentEl.empty();
-        contentEl.createEl('h2', {text: 'Heatmap'});
-
-        const heatmapContainer = contentEl.createDiv();
-        heatmapContainer.id = 'heatmap-container';
+        const root = createRoot(this.containerEl.children[1]);
         
-        // Assuming your Heatmap class has a setContainerId method
-        this.heatmap.setContainer(heatmapContainer);
-        
-        // Fetch your data here
         const data = await this.getHeatmapData();
+        root.render(<Heatmap data={data} />);
         
-        // Render the heatmap
-        this.heatmap.render(data);
     }
 
     onClose() {
-        const {contentEl} = this;
-        contentEl.empty();
+        if (this.root) {
+            this.root.unmount();
+          }
     }
 
     private async getHeatmapData(): Promise<ActivityData> {
