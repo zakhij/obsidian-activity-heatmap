@@ -54,7 +54,7 @@ export class ActivityHeatmapDataManager {
 
     private createMockData(): ActivityData {
         const startDate = new Date('2024-03-01');
-        const endDate = new Date('2024-09-01');
+        const endDate = new Date('2024-11-01');
         const mockData: ActivityData = {};
 
         for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {

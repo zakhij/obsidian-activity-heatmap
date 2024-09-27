@@ -4,6 +4,7 @@ import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapView, VIEW_TYPE_HEATMAP } from './heatmapView';
+import { HeatmapModal } from './heatmapModal';
 
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
@@ -28,15 +29,24 @@ export default class ActivityHeatmapPlugin extends Plugin {
 			(leaf: WorkspaceLeaf) => new HeatmapView(leaf, this)
 		);
 
-		// Add ribbon icon and command to access the heatmap
-		this.addRibbonIcon('calendar', 'Activity Heatmap', () => {
-			this.activateView();
-		});
-
 		this.addCommand({
 			id: 'open-activity-heatmap',
 			name: 'Open Activity Heatmap',
 			callback: () => this.activateView(),
+		});
+
+		// Add command to open heatmap modal
+		this.addCommand({
+			id: 'open-heatmap-modal',
+			name: 'Open Heatmap',
+			callback: () => {
+				new HeatmapModal(this.app, this).open();
+			}
+		});
+
+		// Optionally, add a ribbon icon to open the modal
+		this.addRibbonIcon('calendar', 'Open Heatmap', (evt: MouseEvent) => {
+			new HeatmapModal(this.app, this).open();
 		});
 
 	}
