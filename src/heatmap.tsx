@@ -1,5 +1,5 @@
 import CalHeatmap from 'cal-heatmap';
-//import Tooltip from 'cal-heatmap/src/plugins/tooltip';
+import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
 import { ActivityData } from './types';
 import React, {useEffect, useState } from "react";
@@ -42,11 +42,11 @@ const Heatmap: React.FC<{ data: ActivityData }> = ({ data }) => {
                 },
                 itemSelector: '#heatmap-container',
             },
-            // [
-            //   [
-            //     Tooltip,
-            //   ],
-            // ]
+            [
+              [
+                Tooltip,
+              ],
+            ]
         );
 
         return () => {

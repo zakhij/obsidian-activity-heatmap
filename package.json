@@ -12,7 +12,6 @@
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/cal-heatmap": "^3.5.39",
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
