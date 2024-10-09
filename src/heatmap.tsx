@@ -6,16 +6,15 @@ import Legend from 'cal-heatmap/plugins/Legend';
 import { ActivityData } from './types';
 import React, { useEffect, useState } from "react";
 
-const Heatmap: React.FC<{ data: ActivityData}> = ({ data}) => {
+const Heatmap: React.FC<{ data: ActivityData, metricType: string}> = ({data, metricType}) => {
     const [cal, setCal] = useState<CalHeatmap | null>(null);
-
     useEffect(() => {
         const newCal = new CalHeatmap();
         setCal(newCal);
         const dataArray = Object.entries(data).map(([date, value]) => ({ date, value }));
         const maxValue = Math.max(...dataArray.map(item => item.value));
 
-        // Calculate the start date (1 year ago from today)
+        // Calculate the start (prev year's month)
         const startDate = new Date();
         startDate.setFullYear(startDate.getFullYear() - 1);
         newCal.paint(
@@ -49,8 +48,7 @@ const Heatmap: React.FC<{ data: ActivityData}> = ({ data}) => {
                     Tooltip,
                     {
                         text: function(date: any, value: any, dayjsDate: any) {
-
-                            return value ? `${value} contributions on ${dayjsDate.format('MMMM D, YYYY')}` : `No contributions on ${dayjsDate.format('MMMM D, YYYY')}`;
+                            return value ? `${value} ${metricType} changes on ${dayjsDate.format('MMMM D, YYYY')}` : `No ${metricType} changes on ${dayjsDate.format('MMMM D, YYYY')}`;
                         }
                     }
                 ],
@@ -83,8 +81,6 @@ const Heatmap: React.FC<{ data: ActivityData}> = ({ data}) => {
             ></div>
             More
             </div>
-
-
         </div>
     );
 }

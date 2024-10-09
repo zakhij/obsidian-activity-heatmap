@@ -35,7 +35,6 @@ export default class ActivityHeatmapPlugin extends Plugin {
 			callback: () => this.activateView(),
 		});
 
-		// Add command to open heatmap modal
 		this.addCommand({
 			id: 'open-heatmap-modal',
 			name: 'Open Heatmap',
@@ -44,7 +43,6 @@ export default class ActivityHeatmapPlugin extends Plugin {
 			}
 		});
 
-		// Optionally, add a ribbon icon to open the modal
 		this.addRibbonIcon('calendar', 'Open Heatmap', (evt: MouseEvent) => {
 			new HeatmapModal(this.app, this).open();
 		});

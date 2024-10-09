@@ -19,7 +19,7 @@ export class HeatmapModal extends Modal {
         const root = createRoot(this.containerEl.children[1]);
         
         const data = await this.getHeatmapData();
-        root.render(<Heatmap data={data} />);
+        root.render(<Heatmap data={data} metricType={this.plugin.settings.metricType} />);
         
     }
 
