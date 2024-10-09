@@ -23,17 +23,17 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		// Set up the interval based on settings
 		this.setUpdateInterval();
 
-		// Register the custom view
+		// Register the custom heatmap view
 		this.registerView(
 			VIEW_TYPE_HEATMAP,
 			(leaf: WorkspaceLeaf) => new HeatmapView(leaf, this)
 		);
 
-		this.addCommand({
-			id: 'open-activity-heatmap',
-			name: 'Open Activity Heatmap',
-			callback: () => this.activateView(),
-		});
+		// this.addCommand({
+		// 	id: 'open-activity-heatmap',
+		// 	name: 'Open Activity Heatmap',
+		// 	callback: () => this.activateView(),
+		// });
 
 		this.addCommand({
 			id: 'open-heatmap-modal',

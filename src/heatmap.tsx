@@ -2,7 +2,6 @@ import CalHeatmap from 'cal-heatmap';
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
 import LegendLite from 'cal-heatmap/plugins/LegendLite';
-import Legend from 'cal-heatmap/plugins/Legend';
 import { ActivityData } from './types';
 import React, { useEffect, useState } from "react";
 
@@ -17,6 +16,7 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: string}> = ({data, met
         // Calculate the start (prev year's month)
         const startDate = new Date();
         startDate.setFullYear(startDate.getFullYear() - 1);
+
         newCal.paint(
             {
                 data: { source: dataArray, x: 'date', y: 'value' },
@@ -31,7 +31,7 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: string}> = ({data, met
                 },
                 domain: {
                     type: 'month',
-                    gutter: 3,
+                    gutter: 4,
                     label: { text: 'MMM', textAlign: 'start', position: 'top' },
                 },
                 subDomain: { 
