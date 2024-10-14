@@ -8,26 +8,18 @@ export class ActivityHeatmapDataManager {
     private data: ActivityHeatmapData;
     private metricManagers: MetricManager[];
 
-    constructor(private plugin: ActivityHeatmapPlugin) {
-        this.data = { checkpoints: {}, activityOverTime: {} };
+    constructor(private plugin: ActivityHeatmapPlugin, loadedData: ActivityHeatmapData) {
+        this.data = loadedData;
         this.metricManagers = [
             new FileSizeDataManager(plugin),
             new WordCountDataManager(plugin)
         ];
     }
 
-    async loadData() {
-        this.data = await this.plugin.loadData() || { checkpoints: {}, activityOverTime: {} };
-    }
-
-    async saveData() {
-        await this.plugin.saveData(this.data);
-    }
-
     async updateMetrics() {
         const today = new Date().toISOString().split('T')[0];
-        await this.loadData();
-
+        //await this.loadData();
+        
         // Get the files here, right before we use them
         const files = this.plugin.app.vault.getMarkdownFiles();
         console.log("Number of files:", files.length);
@@ -37,7 +29,8 @@ export class ActivityHeatmapDataManager {
             this.data.checkpoints[manager.metricName] = checkpoint;
             this.data.activityOverTime[manager.metricName] = activity;
         }
-        await this.saveData();
+
+        await this.plugin.saveData(this.data);
     }
 
     //TODO: Change this such that we're returning data for the selected metric (param), and
@@ -47,7 +40,7 @@ export class ActivityHeatmapDataManager {
             console.log("Using mock data");
             return this.createMockData();
         }
-        await this.loadData();
+        //await this.loadData();
         return this.data.activityOverTime[metricType];
     }
 

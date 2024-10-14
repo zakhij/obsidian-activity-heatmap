@@ -30,21 +30,6 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
                 })
             );
 		
-		// new Setting(containerEl)
-		// 	.setName('Update Interval')
-		// 	.setDesc('Choose how often to update the activity heatmap')
-		// 	.addDropdown(dropdown => dropdown
-		// 		.addOption('1', '1 minute')
-		// 		.addOption('5', '5 minutes')
-		// 		.addOption('10', '10 minutes')
-		// 		.addOption('30', '30 minutes')
-		// 		.addOption('60', '1 hour')
-		// 		.setValue(this.plugin.settings.updateInterval.toString())
-		// 		.onChange(async (value) => {
-		// 			this.plugin.settings.updateInterval = parseInt(value) as 5 | 10 | 30 | 60;
-		// 			await this.plugin.saveSettings();
-		// 		})
-		// 	);
 
 		new Setting(containerEl)
 			.setName('Use Mock Data')

@@ -3,8 +3,9 @@ import type { ActivityHeatmapSettings } from './types'
 import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
-import { HeatmapView, VIEW_TYPE_HEATMAP } from './heatmapView';
 import { HeatmapModal } from './heatmapModal';
+import type { ActivityHeatmapData } from './types';
+
 
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
@@ -14,26 +15,13 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		console.log("Loading ActivityHeatmapPlugin");
-		this.dataManager = new ActivityHeatmapDataManager(this);
+		this.dataManager = new ActivityHeatmapDataManager(this,await this.loadData() ?? { checkpoints: {}, activityOverTime: {} });
 		console.log("DataManager created");
 
 		// Add settings tab
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
-		// Set up the interval based on settings
 		this.setUpdateInterval();
-
-		// Register the custom heatmap view
-		this.registerView(
-			VIEW_TYPE_HEATMAP,
-			(leaf: WorkspaceLeaf) => new HeatmapView(leaf, this)
-		);
-
-		// this.addCommand({
-		// 	id: 'open-activity-heatmap',
-		// 	name: 'Open Activity Heatmap',
-		// 	callback: () => this.activateView(),
-		// });
 
 		this.addCommand({
 			id: 'open-heatmap-modal',
@@ -54,8 +42,6 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		if (this.updateInterval) {
 			window.clearInterval(this.updateInterval);
 		}
-		await this.dataManager.saveData();
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_HEATMAP);
 	}
 
 	async loadSettings() {
@@ -73,33 +59,14 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		}
 		this.updateInterval = window.setInterval(() => {
 			this.updateMetrics();
-		}, this.settings.updateInterval * 60 * 1000);
+		}, this.settings.updateIntervalSeconds * 1000);
 		this.registerInterval(this.updateInterval);
-		console.log("Update interval set to " + this.settings.updateInterval + " minute(s)");
+		console.log("Update interval set to " + this.settings.updateIntervalSeconds + " second(s)");
 	}
 
 	private updateMetrics() {
 		console.log("Updating metrics");
-		this.dataManager.updateMetrics().catch(error => {
-			console.error("Error updating metrics:", error);
-		});
-	}
-
-	async activateView() {
-		console.log("Activating view");
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_HEATMAP);
-
-		await this.app.workspace.getRightLeaf(false)?.setViewState({
-			type: VIEW_TYPE_HEATMAP,
-			active: true,
-		});
-		
-		this.app.workspace.revealLeaf(
-			this.app.workspace.getLeavesOfType(VIEW_TYPE_HEATMAP)[0]
-		);
-		console.log("View activated");
-		
-		
+		this.dataManager.updateMetrics();
 	}
 
 }

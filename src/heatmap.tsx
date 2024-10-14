@@ -2,10 +2,10 @@ import CalHeatmap from 'cal-heatmap';
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
 import LegendLite from 'cal-heatmap/plugins/LegendLite';
-import { ActivityData } from './types';
+import { ActivityData, ActivityHeatmapData, ActivityHeatmapSettings } from './types';
 import React, { useEffect, useState } from "react";
 
-const Heatmap: React.FC<{ data: ActivityData, metricType: string}> = ({data, metricType}) => {
+const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSettings['metricType'] }> = ({ data, metricType }) => {
     const [cal, setCal] = useState<CalHeatmap | null>(null);
     useEffect(() => {
         const newCal = new CalHeatmap();

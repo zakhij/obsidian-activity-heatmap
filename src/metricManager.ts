@@ -13,32 +13,31 @@ export abstract class MetricManager {
         let absoluteDifferenceSum = 0;
         const isFirstCheckpoint = !latestData.checkpoints[this.metricName] || Object.keys(latestData.checkpoints[this.metricName]).length === 0;
 
-        try {
-            for (const file of files) {
+        for (const file of files) {
+            try {
                 const metricValue = await this.getMetricValue(file);
                 checkpoint[file.path] = metricValue;
 
-                if (!isFirstCheckpoint) {
-                    const previousValue = latestData.checkpoints[this.metricName]?.[file.path];
-                    if (previousValue !== undefined) {
-                        absoluteDifferenceSum += Math.abs(metricValue - previousValue);
-                    } else {
-                        // New file, count its full value as activity
-                        absoluteDifferenceSum += metricValue;
+            if (!isFirstCheckpoint) {
+                const previousValue = latestData.checkpoints[this.metricName]?.[file.path];
+                if (previousValue !== undefined) {
+                    absoluteDifferenceSum += Math.abs(metricValue - previousValue);
+                } else {
+                    // New file, count its full value as activity
+                    absoluteDifferenceSum += metricValue;
                     }
                 }
+            } catch (error) {
             }
-
-            // Update activity only if it's not the first checkpoint
-            if (!isFirstCheckpoint) {
-                activity[dateToday] = (activity[dateToday] || 0) + absoluteDifferenceSum;
-            }
-
-            return { checkpoint, activity};
-        } catch (error) {
-            console.error(`Error calculating ${this.metricName}:`, error);
-            throw error;
         }
+
+        // Update activity only if it's not the first checkpoint
+        if (!isFirstCheckpoint) {
+            activity[dateToday] = (activity[dateToday] || 0) + absoluteDifferenceSum;
+        }
+
+        return { checkpoint, activity};
+        
     }
 }
 

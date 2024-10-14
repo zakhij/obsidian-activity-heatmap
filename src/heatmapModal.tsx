@@ -6,20 +6,21 @@ import { Root, createRoot } from "react-dom/client";
 import  Heatmap  from './heatmap';
 
 export class HeatmapModal extends Modal {
-    private root: Root | null = null;
+    private root: Root;
     private plugin: ActivityHeatmapPlugin;
 
     constructor(app: App, plugin: ActivityHeatmapPlugin) {
         super(app);
         this.plugin = plugin;
+        this.root = createRoot(this.containerEl.children[1]);
 
     }
 
     async onOpen() {
-        const root = createRoot(this.containerEl.children[1]);
+        //const root = createRoot(this.containerEl.children[1]);
         
-        const data = await this.getHeatmapData();
-        root.render(<Heatmap data={data} metricType={this.plugin.settings.metricType} />);
+        const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.useMockData, this.plugin.settings.metricType);
+        this.root.render(<Heatmap data={data} metricType={this.plugin.settings.metricType} />);
         
     }
 
@@ -27,10 +28,5 @@ export class HeatmapModal extends Modal {
         if (this.root) {
             this.root.unmount();
           }
-    }
-
-    private async getHeatmapData(): Promise<ActivityData> {
-        const metricType = this.plugin.settings.metricType;
-        return this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.useMockData, metricType);
     }
 }
