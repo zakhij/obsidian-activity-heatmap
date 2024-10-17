@@ -12,21 +12,17 @@ export class HeatmapModal extends Modal {
     constructor(app: App, plugin: ActivityHeatmapPlugin) {
         super(app);
         this.plugin = plugin;
-        //this.root = createRoot(this.containerEl.children[1]);
         this.setTitle('Activity Heatmap');
     }
 
     async onOpen() {
         const { contentEl } = this;
-        // Set a larger size for the modal
-        this.modalEl.style.width = '80vw';
-        //this.modalEl.style.height = '80vh';
         
+        this.modalEl.style.width = '80vw';
         contentEl.style.display = 'flex';
         contentEl.style.flexDirection = 'column';
         contentEl.style.justifyContent = 'center';
         contentEl.style.alignItems = 'center';
-        //this.contentEl.style.height = '100%';
 
         const settingsContainer = contentEl.createDiv();        
 
@@ -35,9 +31,11 @@ export class HeatmapModal extends Modal {
             .addDropdown(dropdown => dropdown
                 .addOption('fileSize', 'File Size')
                 .addOption('wordCount', 'Word Count')
-                .onChange((value) => {
+                .setValue(this.plugin.settings.metricType)
+                .onChange(async (value) => {
                     this.plugin.settings.metricType = value as ActivityHeatmapSettings['metricType'];
-                    this.plugin.saveSettings();
+                    await this.plugin.saveSettings();
+                    this.renderHeatmap();
                 })
             );
 
@@ -54,6 +52,10 @@ export class HeatmapModal extends Modal {
         const reactContainer = contentEl.createDiv();
         this.root = createRoot(reactContainer);
 
+        await this.renderHeatmap();
+    }
+
+    async renderHeatmap() {
         const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.useMockData, this.plugin.settings.metricType);
         this.root.render(<Heatmap data={data} metricType={this.plugin.settings.metricType} />);
     }
