@@ -40,20 +40,29 @@ export class HeatmapModal extends Modal {
                 })
             );
 
-        //TODO: Add proper logic for determining year options based on data
         new Setting(settingsContainer)
             .setName('Year')
-            .addDropdown(dropdown => dropdown
-                .addOption('Past Year', 'Past Year')
-                .addOption('2024', '2024')
-                .addOption('2023', '2023')
-                .setValue(this.plugin.settings.year)
-                .onChange(async (value) => {
+            .addDropdown(async (dropdown) => {
+                dropdown.addOption('Past Year', 'Past Year');
+
+                const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.useMockData, this.plugin.settings.metricType);
+
+                const years = Object.keys(data)
+                    .map(date => new Date(date).getFullYear())
+                    .filter((value, index, self) => self.indexOf(value) === index)
+                    .sort((a, b) => b - a); 
+
+                years.forEach(year => {
+                    dropdown.addOption(year.toString(), year.toString());
+                });
+
+                dropdown.setValue(this.plugin.settings.year);
+                dropdown.onChange(async (value) => {
                     this.plugin.settings.year = value as ActivityHeatmapSettings['year'];
                     await this.plugin.saveSettings();
                     this.renderHeatmap();
-                })
-            );
+                });
+            });
 
 
         const reactContainer = contentEl.createDiv();
