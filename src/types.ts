@@ -23,5 +23,6 @@ export interface ActivityHeatmapSettings{
     metricType: 'fileSize' | 'wordCount';
     updateIntervalSeconds: 1 | 5 | 10 | 30 | 60; // in seconds
     useMockData: boolean;
+    year: string;
 }
 

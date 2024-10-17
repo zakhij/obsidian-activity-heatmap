@@ -17,6 +17,7 @@ export class HeatmapModal extends Modal {
 
     async onOpen() {
         const { contentEl } = this;
+        contentEl.empty();
         
         this.modalEl.style.width = '80vw';
         contentEl.style.display = 'flex';
@@ -39,14 +40,20 @@ export class HeatmapModal extends Modal {
                 })
             );
 
-        //TODO: Add proper logic for determining years
-        //TODO: Add logic for selecting a year (refresh heatmap)
+        //TODO: Add proper logic for determining year options based on data
         new Setting(settingsContainer)
             .setName('Year')
             .addDropdown(dropdown => dropdown
+                .addOption('Past Year', 'Past Year')
                 .addOption('2024', '2024')
                 .addOption('2023', '2023')
-                    );
+                .setValue(this.plugin.settings.year)
+                .onChange(async (value) => {
+                    this.plugin.settings.year = value as ActivityHeatmapSettings['year'];
+                    await this.plugin.saveSettings();
+                    this.renderHeatmap();
+                })
+            );
 
 
         const reactContainer = contentEl.createDiv();
@@ -56,8 +63,16 @@ export class HeatmapModal extends Modal {
     }
 
     async renderHeatmap() {
+        console.log("Rendering Heatmap");
         const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.useMockData, this.plugin.settings.metricType);
-        this.root.render(<Heatmap data={data} metricType={this.plugin.settings.metricType} />);
+        const { metricType, year } = this.plugin.settings;
+        this.root.render(
+            <Heatmap 
+                data={data} 
+                metricType={metricType} 
+                year={year} 
+            />
+        );
     }
 
     onClose() {

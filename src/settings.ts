@@ -1,6 +1,7 @@
 
 import { App, PluginSettingTab, Setting } from 'obsidian'
 import ActivityHeatmapPlugin from './main'
+import { ActivityHeatmapSettings } from './types';
 
 
 export class ActivityHeatmapSettingTab extends PluginSettingTab {
@@ -24,9 +25,8 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
                 .addOption('wordCount', 'Word Count')
                 .setValue(this.plugin.settings.metricType)
                 .onChange(async (value) => {
-                    this.plugin.settings.metricType = value as 'fileSize' | 'wordCount';
+                    this.plugin.settings.metricType = value as ActivityHeatmapSettings['metricType'];
                     await this.plugin.saveSettings();
-                    //IN FUTURE: this.plugin.updateHeatmap();
                 })
             );
 		
@@ -37,7 +37,7 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.useMockData)
 				.onChange(async (value) => {
-					this.plugin.settings.useMockData = value as boolean;
+					this.plugin.settings.useMockData = value as ActivityHeatmapSettings['useMockData'];
 					await this.plugin.saveSettings();
 				})
 			);

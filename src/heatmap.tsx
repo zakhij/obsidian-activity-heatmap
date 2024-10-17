@@ -2,26 +2,39 @@ import CalHeatmap from 'cal-heatmap';
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
 import LegendLite from 'cal-heatmap/plugins/LegendLite';
-import { ActivityData, ActivityHeatmapData, ActivityHeatmapSettings } from './types';
-import React, { useEffect, useState } from "react";
+import { ActivityData, ActivityHeatmapSettings } from './types';
+import React, { useEffect, useRef, memo } from "react";
 
-const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSettings['metricType'] }> = ({ data, metricType }) => {
-    const [cal, setCal] = useState<CalHeatmap | null>(null);
+const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSettings['metricType'], year: ActivityHeatmapSettings['year'] }> = memo(({ data, metricType, year }) => {
+    const calRef = useRef<CalHeatmap | null>(null);
+
     useEffect(() => {
-        const newCal = new CalHeatmap();
-        setCal(newCal);
+        if (!calRef.current) {
+            calRef.current = new CalHeatmap();
+        }
+
+        const cal = calRef.current;
+        
         const dataArray = Object.entries(data).map(([date, value]) => ({ date, value }));
         const maxValue = Math.max(...dataArray.map(item => item.value));
 
-        // Calculate the start (prev year's month)
+        // Calculate the cal start & range based on the year selected
         const startDate = new Date();
-        startDate.setFullYear(startDate.getFullYear() - 1);
+        let range: number;
+        if (year === 'Past Year') {
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            range = 13;
+        } else {
+            startDate.setFullYear(parseInt(year), 0, 1);
+            range = 12;
+        }
+        console.log("Start Date: ", startDate);
 
-        newCal.paint(
+        cal.paint(
             {
                 data: { source: dataArray, x: 'date', y: 'value' },
-                date: { start: startDate},
-                range: 13,
+                date: { start: startDate },
+                range: range,
                 scale: {
                     color: {
                         type: 'threshold',
@@ -63,12 +76,11 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSetting
             ]
         );
 
-
-
         return () => {
-            newCal.destroy();
+            cal.destroy();
+            calRef.current = null;
         };
-    }, [data]);
+    }, [data, metricType, year]);
 
     return (
         <div>
@@ -83,6 +95,6 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSetting
             </div>
         </div>
     );
-}
+})
 
 export default Heatmap;
