@@ -1,18 +1,20 @@
-import type { ActivityHeatmapData, CheckpointData, ActivityData } from './types'
+import type { ActivityHeatmapData, CheckpointData, ActivityData, MetricType } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 
 type MetricCalculator = (file: TFile) => number | Promise<number>;
 
 export class MetricManager {
-    private metricCalculators: Record<string, MetricCalculator> = {};
+    private metricCalculators: Record<MetricType, MetricCalculator>;
 
     constructor(private plugin: ActivityHeatmapPlugin) {
-        this.registerMetricCalculator('fileSize', this.calculateFileSize.bind(this));
-        this.registerMetricCalculator('wordCount', this.calculateWordCount.bind(this));
+        this.metricCalculators = {
+            fileSize: this.calculateFileSize.bind(this),
+            wordCount: this.calculateWordCount.bind(this),
+        };
     }
 
-    registerMetricCalculator(metricName: string, calculator: MetricCalculator) {
+    registerMetricCalculator(metricName: MetricType, calculator: MetricCalculator) {
         this.metricCalculators[metricName] = calculator;
     }
 
@@ -25,7 +27,7 @@ export class MetricManager {
         return content.split(/\s+/).length;
     }
 
-    async calculateMetrics(metricName: string, files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
+    async calculateMetrics(metricName: MetricType, files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
         const calculator = this.metricCalculators[metricName];
         if (!calculator) {
             throw new Error(`No calculator found for metric: ${metricName}`);

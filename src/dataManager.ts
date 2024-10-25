@@ -3,6 +3,7 @@ import type ActivityHeatmapPlugin from './main'
 import { MetricManager } from './metricManager';
 import { ActivityData } from './types';
 import { DEV_BUILD } from './config';
+import type { MetricType } from './types'
 
 
 export class ActivityHeatmapDataManager {
@@ -18,7 +19,7 @@ export class ActivityHeatmapDataManager {
         const today = new Date().toISOString().split('T')[0];
         const files = this.plugin.app.vault.getMarkdownFiles();
 
-        const metricTypes = ['fileSize', 'wordCount'];
+        const metricTypes: MetricType[] = ['fileSize', 'wordCount'];
 
         for (const metricType of metricTypes) {
             const { checkpoint, activity } = await this.metricManager.calculateMetrics(metricType, files, this.data, today);
@@ -30,7 +31,7 @@ export class ActivityHeatmapDataManager {
     }
 
     
-    async getActivityHeatmapData(metricType: string): Promise<ActivityData> {
+    async getActivityHeatmapData(metricType: MetricType): Promise<ActivityData> {
         if (DEV_BUILD && this.plugin.settings.useMockData) {
             console.log("Using mock data");
             return this.createMockData();

@@ -1,22 +1,23 @@
+export type FilePath = string;
+export type DateString = string; // Format: YYYY-MM-DD
+
 export interface MetricData {
     [key: string]: number
 }
 
 export interface CheckpointData {
-    [fileName: string]: number
+    [filePath: FilePath]: number;
 }
 
 export interface ActivityData {
-    [date: string]: number
+    [date: DateString]: number;
 }
 
+export type MetricType = 'fileSize' | 'wordCount';
+
 export interface ActivityHeatmapData {
-    checkpoints: {
-        [metricName: string]: CheckpointData
-    };
-    activityOverTime: {
-        [metricName: string]: ActivityData
-    };
+    checkpoints: Record<MetricType, CheckpointData>;
+    activityOverTime: Record<MetricType, ActivityData>;
 }
 
 export interface ActivityHeatmapSettings{
