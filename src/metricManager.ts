@@ -2,63 +2,62 @@ import type { ActivityHeatmapData, CheckpointData, ActivityData } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 
-export abstract class MetricManager {
-    constructor(protected plugin: ActivityHeatmapPlugin, public metricName: string) {}
+type MetricCalculator = (file: TFile) => number | Promise<number>;
 
-    abstract getMetricValue(file: TFile): number | Promise<number>;
+export class MetricManager {
+    private metricCalculators: Record<string, MetricCalculator> = {};
 
-    async calculateMetrics(files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData}> {
+    constructor(private plugin: ActivityHeatmapPlugin) {
+        this.registerMetricCalculator('fileSize', this.calculateFileSize.bind(this));
+        this.registerMetricCalculator('wordCount', this.calculateWordCount.bind(this));
+    }
+
+    registerMetricCalculator(metricName: string, calculator: MetricCalculator) {
+        this.metricCalculators[metricName] = calculator;
+    }
+
+    private calculateFileSize(file: TFile): number {
+        return file.stat.size;
+    }
+
+    private async calculateWordCount(file: TFile): Promise<number> {
+        const content = await this.plugin.app.vault.read(file);
+        return content.split(/\s+/).length;
+    }
+
+    async calculateMetrics(metricName: string, files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
+        const calculator = this.metricCalculators[metricName];
+        if (!calculator) {
+            throw new Error(`No calculator found for metric: ${metricName}`);
+        }
+
         const checkpoint: CheckpointData = {};
-        const activity: ActivityData = { ...latestData.activityOverTime[this.metricName] };
+        const activity: ActivityData = { ...latestData.activityOverTime[metricName] };
         let absoluteDifferenceSum = 0;
-        const isFirstCheckpoint = !latestData.checkpoints[this.metricName] || Object.keys(latestData.checkpoints[this.metricName]).length === 0;
+        const isFirstCheckpoint = !latestData.checkpoints[metricName] || Object.keys(latestData.checkpoints[metricName]).length === 0;
 
         for (const file of files) {
             try {
-                const metricValue = await this.getMetricValue(file);
+                const metricValue = await calculator(file);
                 checkpoint[file.path] = metricValue;
 
-            if (!isFirstCheckpoint) {
-                const previousValue = latestData.checkpoints[this.metricName]?.[file.path];
-                if (previousValue !== undefined) {
-                    absoluteDifferenceSum += Math.abs(metricValue - previousValue);
-                } else {
-                    // New file, count its full value as activity
-                    absoluteDifferenceSum += metricValue;
+                if (!isFirstCheckpoint) {
+                    const previousValue = latestData.checkpoints[metricName]?.[file.path];
+                    if (previousValue !== undefined) {
+                        absoluteDifferenceSum += Math.abs(metricValue - previousValue);
+                    } else {
+                        absoluteDifferenceSum += metricValue;
                     }
                 }
             } catch (error) {
+                console.error(`Error calculating ${metricName} for file ${file.path}:`, error);
             }
         }
 
-        // Update activity only if it's not the first checkpoint
         if (!isFirstCheckpoint) {
             activity[dateToday] = (activity[dateToday] || 0) + absoluteDifferenceSum;
         }
 
-        return { checkpoint, activity};
-        
-    }
-}
-
-export class FileSizeDataManager extends MetricManager {
-    constructor(plugin: ActivityHeatmapPlugin) {
-        super(plugin, 'fileSize');
-    }
-
-    getMetricValue(file: TFile): number {
-        return file.stat.size;
-    }
-}
-
-export class WordCountDataManager extends MetricManager {
-    constructor(plugin: ActivityHeatmapPlugin) {
-        super(plugin, 'wordCount');
-    }
-
-    //Rather trivial implementation, but it's a start
-    async getMetricValue(file: TFile): Promise<number> {
-        const content = await this.plugin.app.vault.read(file);
-        return content.split(/\s+/).length;
+        return { checkpoint, activity };
     }
 }

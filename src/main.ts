@@ -1,10 +1,9 @@
-import { Plugin, ViewStateResult, WorkspaceLeaf } from 'obsidian';
+import { Plugin } from 'obsidian';
 import type { ActivityHeatmapSettings } from './types'
 import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './heatmapModal';
-import type { ActivityHeatmapData } from './types';
 
 
 export default class ActivityHeatmapPlugin extends Plugin {
@@ -16,9 +15,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		await this.loadSettings();
 		console.log("Loading ActivityHeatmapPlugin");
 		this.dataManager = new ActivityHeatmapDataManager(this,await this.loadData() ?? { checkpoints: {}, activityOverTime: {} });
-		console.log("DataManager created");
 
-		// Add settings tab
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
 		this.setUpdateInterval();
@@ -61,7 +58,6 @@ export default class ActivityHeatmapPlugin extends Plugin {
 			this.updateMetrics();
 		}, this.settings.updateIntervalSeconds * 1000);
 		this.registerInterval(this.updateInterval);
-		console.log("Update interval set to " + this.settings.updateIntervalSeconds + " second(s)");
 	}
 
 	private updateMetrics() {

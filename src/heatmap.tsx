@@ -28,7 +28,6 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSetting
             startDate.setFullYear(parseInt(year), 0, 1);
             range = 12;
         }
-        console.log("Start Date: ", startDate);
 
         cal.paint(
             {

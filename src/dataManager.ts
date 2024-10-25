@@ -1,46 +1,39 @@
 import type { ActivityHeatmapData} from './types'
 import type ActivityHeatmapPlugin from './main'
-import { MetricManager, FileSizeDataManager, WordCountDataManager } from './metricManager';
+import { MetricManager } from './metricManager';
 import { ActivityData } from './types';
 
 
 export class ActivityHeatmapDataManager {
     private data: ActivityHeatmapData;
-    private metricManagers: MetricManager[];
+    private metricManager: MetricManager;
 
     constructor(private plugin: ActivityHeatmapPlugin, loadedData: ActivityHeatmapData) {
         this.data = loadedData;
-        this.metricManagers = [
-            new FileSizeDataManager(plugin),
-            new WordCountDataManager(plugin)
-        ];
+        this.metricManager = new MetricManager(plugin);
     }
 
     async updateMetrics() {
         const today = new Date().toISOString().split('T')[0];
-        //await this.loadData();
-        
-        // Get the files here, right before we use them
         const files = this.plugin.app.vault.getMarkdownFiles();
-        console.log("Number of files:", files.length);
 
-        for (const manager of this.metricManagers) {
-            const { checkpoint, activity } = await manager.calculateMetrics(files, this.data, today);
-            this.data.checkpoints[manager.metricName] = checkpoint;
-            this.data.activityOverTime[manager.metricName] = activity;
+        const metricTypes = ['fileSize', 'wordCount'];
+
+        for (const metricType of metricTypes) {
+            const { checkpoint, activity } = await this.metricManager.calculateMetrics(metricType, files, this.data, today);
+            this.data.checkpoints[metricType] = checkpoint;
+            this.data.activityOverTime[metricType] = activity;
         }
 
         await this.plugin.saveData(this.data);
     }
 
-    //TODO: Change this such that we're returning data for the selected metric (param), and
-    // only the activity over time data.
+    
     async getActivityHeatmapData(useMockData: boolean, metricType: string): Promise<ActivityData> {
         if (useMockData) {
             console.log("Using mock data");
             return this.createMockData();
         }
-        //await this.loadData();
         return this.data.activityOverTime[metricType];
     }
 
