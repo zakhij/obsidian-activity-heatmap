@@ -4,6 +4,7 @@ import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './heatmapModal';
+import { DEV_BUILD } from './config';
 
 
 export default class ActivityHeatmapPlugin extends Plugin {
@@ -43,6 +44,9 @@ export default class ActivityHeatmapPlugin extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		if (!DEV_BUILD) {
+			delete this.settings.useMockData;
+		}
 	}
 
 	async saveSettings() {

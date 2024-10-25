@@ -1,7 +1,7 @@
-
 import { App, PluginSettingTab, Setting } from 'obsidian'
 import ActivityHeatmapPlugin from './main'
 import { ActivityHeatmapSettings } from './types';
+import { DEV_BUILD } from './config';
 
 
 export class ActivityHeatmapSettingTab extends PluginSettingTab {
@@ -31,15 +31,17 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
             );
 		
 
-		new Setting(containerEl)
-			.setName('Use Mock Data')
-			.setDesc('Toggle to use mock data for the heatmap. FOR DEV TESTING.')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.useMockData)
-				.onChange(async (value) => {
-					this.plugin.settings.useMockData = value as ActivityHeatmapSettings['useMockData'];
-					await this.plugin.saveSettings();
-				})
-			);
+		if (DEV_BUILD) {
+			new Setting(containerEl)
+				.setName('Use Mock Data')
+				.setDesc('Toggle to use mock data for the heatmap. FOR DEV TESTING ONLY.')
+				.addToggle(toggle => toggle
+					.setValue(this.plugin.settings.useMockData || false)
+					.onChange(async (value) => {
+						this.plugin.settings.useMockData = value;
+						await this.plugin.saveSettings();
+					})
+				);
+		}
 	}
 }

@@ -2,6 +2,7 @@ import type { ActivityHeatmapData} from './types'
 import type ActivityHeatmapPlugin from './main'
 import { MetricManager } from './metricManager';
 import { ActivityData } from './types';
+import { DEV_BUILD } from './config';
 
 
 export class ActivityHeatmapDataManager {
@@ -29,8 +30,8 @@ export class ActivityHeatmapDataManager {
     }
 
     
-    async getActivityHeatmapData(useMockData: boolean, metricType: string): Promise<ActivityData> {
-        if (useMockData) {
+    async getActivityHeatmapData(metricType: string): Promise<ActivityData> {
+        if (DEV_BUILD && this.plugin.settings.useMockData) {
             console.log("Using mock data");
             return this.createMockData();
         }

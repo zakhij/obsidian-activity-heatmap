@@ -1,9 +1,9 @@
-import type { ActivityHeatmapSettings } from './types'
+import { ActivityHeatmapSettings } from './types';
 
 
 
 export const DEFAULT_SETTINGS: ActivityHeatmapSettings = {
     metricType: 'fileSize',
-    updateIntervalSeconds: 5,
-    useMockData: false,
-}
+    updateIntervalSeconds: 300,
+    // Remove useMockData from here
+};
