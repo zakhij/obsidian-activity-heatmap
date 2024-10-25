@@ -5,21 +5,32 @@ import * as React from 'react';
 import { Root, createRoot } from "react-dom/client";
 import  Heatmap  from './heatmap';
 
+/**
+ * Modal for displaying the activity heatmap.
+ */
 export class HeatmapModal extends Modal {
     private root: Root;
     private plugin: ActivityHeatmapPlugin;
 
+    /**
+     * Creates an instance of HeatmapModal.
+     * @param app - The Obsidian app instance.
+     * @param plugin - The main plugin instance.
+     */
     constructor(app: App, plugin: ActivityHeatmapPlugin) {
         super(app);
         this.plugin = plugin;
         this.setTitle('Activity Heatmap');
     }
 
+    /**
+     * Handles the opening of the modal.
+     */
     async onOpen() {
         const { contentEl } = this;
         contentEl.empty();
         
-        this.modalEl.style.width = '80vw';
+        this.modalEl.style.width = '90vw';
         contentEl.style.display = 'flex';
         contentEl.style.flexDirection = 'column';
         contentEl.style.justifyContent = 'center';
@@ -71,6 +82,9 @@ export class HeatmapModal extends Modal {
         await this.renderHeatmap();
     }
 
+    /**
+     * Renders the heatmap component.
+     */
     async renderHeatmap() {
         const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.metricType);
         const { metricType, year } = this.plugin.settings;
@@ -83,6 +97,9 @@ export class HeatmapModal extends Modal {
         );
     }
 
+    /**
+     * Handles the closing of the modal.
+     */
     onClose() {
         if (this.root) {
             this.root.unmount();

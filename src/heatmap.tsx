@@ -2,10 +2,28 @@ import CalHeatmap from 'cal-heatmap';
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
 import LegendLite from 'cal-heatmap/plugins/LegendLite';
-import { ActivityData, ActivityHeatmapSettings } from './types';
+import { ActivityData, MetricType } from './types';
 import React, { useEffect, useRef, memo } from "react";
+import { 
+    convertDataToArray, 
+    calculateMaxValue, 
+    calculateDateRange, 
+    generateColorScale, 
+    generateTooltipText 
+} from './utils';
 
-const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSettings['metricType'], year: ActivityHeatmapSettings['year'] }> = memo(({ data, metricType, year }) => {
+interface HeatmapProps {
+    data: ActivityData;
+    metricType: MetricType;
+    year: string;
+}
+
+/**
+ * React component for rendering the activity heatmap.
+ * @param props - The component props.
+ * @returns A React element representing the heatmap.
+ */
+const Heatmap: React.FC<HeatmapProps> = memo(({ data, metricType, year }) => {
     const calRef = useRef<CalHeatmap | null>(null);
 
     useEffect(() => {
@@ -15,19 +33,9 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSetting
 
         const cal = calRef.current;
         
-        const dataArray = Object.entries(data).map(([date, value]) => ({ date, value }));
-        const maxValue = Math.max(...dataArray.map(item => item.value));
-
-        // Calculate the cal start & range based on the year selected
-        const startDate = new Date();
-        let range: number;
-        if (year === 'Past Year') {
-            startDate.setFullYear(startDate.getFullYear() - 1);
-            range = 13;
-        } else {
-            startDate.setFullYear(parseInt(year), 0, 1);
-            range = 12;
-        }
+        const dataArray = convertDataToArray(data);
+        const maxValue = calculateMaxValue(dataArray);
+        const { startDate, range } = calculateDateRange(year);
 
         cal.paint(
             {
@@ -35,11 +43,7 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSetting
                 date: { start: startDate },
                 range: range,
                 scale: {
-                    color: {
-                        type: 'threshold',
-                        range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
-                        domain: [0, Math.floor(maxValue / 3), Math.floor((2 * maxValue) / 3), maxValue],
-                    },
+                    color: generateColorScale(maxValue),
                 },
                 domain: {
                     type: 'month',
@@ -59,9 +63,7 @@ const Heatmap: React.FC<{ data: ActivityData, metricType: ActivityHeatmapSetting
                 [
                     Tooltip,
                     {
-                        text: function(date: any, value: any, dayjsDate: any) {
-                            return value ? `${value} ${metricType} changes on ${dayjsDate.format('MMMM D, YYYY')}` : `No ${metricType} changes on ${dayjsDate.format('MMMM D, YYYY')}`;
-                        }
+                        text: generateTooltipText(metricType)
                     }
                 ],
                 [
