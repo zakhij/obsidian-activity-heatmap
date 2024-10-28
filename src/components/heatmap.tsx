@@ -1,6 +1,8 @@
 import CalHeatmap from 'cal-heatmap';
+// @ts-ignore
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
+// @ts-ignore
 import LegendLite from 'cal-heatmap/plugins/LegendLite';
 import { ActivityData, MetricType } from '../types';
 import React, { useEffect, useRef, memo } from "react";
@@ -65,15 +67,19 @@ const Heatmap: React.FC<HeatmapProps> = memo(({ data, metricType, year }) => {
                 itemSelector: '#heatmap-container',
             },
             [
+                //@ts-ignore
                 [
                     Tooltip,
                     {
+                        //@ts-ignore
                         text: generateTooltipText(metricType)
                     }
                 ],
+                //@ts-ignore
                 [
                     LegendLite,
                     {
+                        // @ts-ignore
                         itemSelector: '#heatmap-legend',
                         label: 'Contributions',
                         includeBlank: true,
