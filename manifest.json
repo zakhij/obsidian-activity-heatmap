@@ -3,7 +3,7 @@
 	"name": "Activity Heatmap",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "This plugin provides an activity heatmap to track Obsidian usage, similar to GitHub's contribution chart.",
+	"description": "Tracks and visualizes app activity, similar to GitHub's contribution chart.",
 	"author": "Zak Hijaouy",
 	"authorUrl": "https://github.com/zakhij",
 	"fundingUrl": "https://github.com/zakhij",
