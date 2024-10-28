@@ -3,7 +3,7 @@ import type { ActivityHeatmapSettings } from './types'
 import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
-import { HeatmapModal } from './heatmapModal';
+import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
 
 

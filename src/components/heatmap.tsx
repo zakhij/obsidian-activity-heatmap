@@ -2,7 +2,7 @@ import CalHeatmap from 'cal-heatmap';
 import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
 import LegendLite from 'cal-heatmap/plugins/LegendLite';
-import { ActivityData, MetricType } from './types';
+import { ActivityData, MetricType } from '../types';
 import React, { useEffect, useRef, memo } from "react";
 import { 
     convertDataToArray, 
@@ -10,7 +10,7 @@ import {
     calculateDateRange, 
     generateColorScale, 
     generateTooltipText 
-} from './utils';
+} from '../utils';
 
 interface HeatmapProps {
     data: ActivityData;

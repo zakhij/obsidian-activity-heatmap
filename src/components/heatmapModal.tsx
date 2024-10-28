@@ -1,6 +1,6 @@
 import { App, Modal, Setting } from 'obsidian';
-import { ActivityHeatmapSettings } from './types';
-import  ActivityHeatmapPlugin  from './main';
+import { ActivityHeatmapSettings } from '../types';
+import  ActivityHeatmapPlugin  from '../main';
 import * as React from 'react';
 import { Root, createRoot } from "react-dom/client";
 import  Heatmap  from './heatmap';
