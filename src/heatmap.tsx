@@ -33,13 +33,18 @@ const Heatmap: React.FC<HeatmapProps> = memo(({ data, metricType, year }) => {
 
         const cal = calRef.current;
         
-        const dataArray = convertDataToArray(data);
+        const dataArray = convertDataToArray(data)
+            .filter(item => item.value !== 0); // Filter out zero values for visual purposes
         const maxValue = calculateMaxValue(dataArray);
         const { startDate, range } = calculateDateRange(year);
 
         cal.paint(
             {
-                data: { source: dataArray, x: 'date', y: 'value' },
+                data: { 
+                    source: dataArray, 
+                    x: 'date', 
+                    y: 'value'
+                },
                 date: { start: startDate },
                 range: range,
                 scale: {
