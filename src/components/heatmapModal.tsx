@@ -30,11 +30,10 @@ export class HeatmapModal extends Modal {
         const { contentEl } = this;
         contentEl.empty();
         
-        this.modalEl.style.width = '90vw';
-        contentEl.style.display = 'flex';
-        contentEl.style.flexDirection = 'column';
-        contentEl.style.justifyContent = 'center';
-        contentEl.style.alignItems = 'center';
+        // Add the class to the modal element
+        this.modalEl.addClass('activity-heatmap-modal');
+        // Add the class to the content element
+        contentEl.addClass('activity-heatmap-content');
 
         const settingsContainer = contentEl.createDiv();        
 
