@@ -1,4 +1,4 @@
-# Obsidian Activity Heatmap Plugin
+# Activity Heatmap Plugin
 
 A plugin for [Obsidian](https://obsidian.md) that provides a GitHub-style activity heatmap visualization of your note-taking activity. Track your writing habits and vault changes over time with an intuitive visual representation!
 
@@ -6,7 +6,7 @@ A plugin for [Obsidian](https://obsidian.md) that provides a GitHub-style activi
 
 ## How it works
 
-The plugin periodically (every 5 sec) takes a snapshot of the files in the vault, storing values on local and comparing them to the previous snapshot to gauge activity. Currently, two metrics are tracked as proxies for activity: file size and word count. The heatmap is updated automatically in the background and available as a ribbon icon or through the command palette, displaying the activity data over the designated time period.
+The plugin periodically takes a snapshot of the files in the vault, storing values on local and comparing them to the previous snapshot to gauge activity. Currently, two metrics are tracked as proxies for activity: file size and word count. The heatmap is updated automatically in the background and available as a ribbon icon or through the command palette, displaying the activity data over the designated time period.
 
 
 ## Usage

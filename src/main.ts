@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
+import { TFile } from 'obsidian';
 
 
 export default class ActivityHeatmapPlugin extends Plugin {
@@ -19,17 +20,39 @@ export default class ActivityHeatmapPlugin extends Plugin {
 
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
-		this.setUpdateInterval();
+		this.registerEvent(
+			this.app.vault.on('modify', (file) => {
+				if (file instanceof TFile && file.extension === 'md') {
+					this.dataManager.updateMetricsForFile(file);
+				}
+			})
+		);
+
+		this.registerEvent(
+			this.app.vault.on('create', (file) => {
+				if (file instanceof TFile && file.extension === 'md') {
+					this.dataManager.updateMetricsForFile(file);
+				}
+			})
+		);
+
+		this.registerEvent(
+			this.app.vault.on('delete', (file) => {
+				if (file instanceof TFile && file.extension === 'md') {
+					this.dataManager.removeFileMetrics(file.path);
+				}
+			})
+		);
 
 		this.addCommand({
 			id: 'open-heatmap-modal',
-			name: 'Open Heatmap',
+			name: 'Open heatmap',
 			callback: () => {
 				new HeatmapModal(this.app, this).open();
 			}
 		});
 
-		this.addRibbonIcon('calendar', 'Open Heatmap', (evt: MouseEvent) => {
+		this.addRibbonIcon('calendar', 'Open heatmap', (evt: MouseEvent) => {
 			new HeatmapModal(this.app, this).open();
 		});
 
@@ -51,22 +74,6 @@ export default class ActivityHeatmapPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.setUpdateInterval(); 
-	}
-
-	private setUpdateInterval() { 
-		if (this.updateInterval) {
-			window.clearInterval(this.updateInterval);
-		}
-		this.updateInterval = window.setInterval(() => {
-			this.updateMetrics();
-		}, this.settings.updateIntervalSeconds * 1000);
-		this.registerInterval(this.updateInterval);
-	}
-
-	private updateMetrics() {
-		console.log("Updating metrics");
-		this.dataManager.updateMetrics();
 	}
 
 }

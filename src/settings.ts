@@ -18,11 +18,11 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-            .setName('Metric Type')
+            .setName('Metric type')
             .setDesc('Choose the metric to use for the activity heatmap')
             .addDropdown(dropdown => dropdown
-                .addOption('fileSize', 'File Size')
-                .addOption('wordCount', 'Word Count')
+                .addOption('fileSize', 'File size')
+                .addOption('wordCount', 'Word count')
                 .setValue(this.plugin.settings.metricType)
                 .onChange(async (value) => {
                     this.plugin.settings.metricType = value as ActivityHeatmapSettings['metricType'];
@@ -33,7 +33,7 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
 
 		if (DEV_BUILD) {
 			new Setting(containerEl)
-				.setName('Use Mock Data')
+				.setName('Use mock data')
 				.setDesc('Toggle to use mock data for the heatmap. FOR DEV TESTING ONLY.')
 				.addToggle(toggle => toggle
 					.setValue(this.plugin.settings.useMockData || false)

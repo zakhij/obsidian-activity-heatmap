@@ -38,10 +38,10 @@ export class HeatmapModal extends Modal {
         const settingsContainer = contentEl.createDiv();        
 
         new Setting(settingsContainer)
-            .setName('Metric Type')
+            .setName('Metric type')
             .addDropdown(dropdown => dropdown
-                .addOption('fileSize', 'File Size')
-                .addOption('wordCount', 'Word Count')
+                .addOption('fileSize', 'File size')
+                .addOption('wordCount', 'Word count')
                 .setValue(this.plugin.settings.metricType)
                 .onChange(async (value) => {
                     this.plugin.settings.metricType = value as ActivityHeatmapSettings['metricType'];
@@ -53,7 +53,7 @@ export class HeatmapModal extends Modal {
         new Setting(settingsContainer)
             .setName('Year')
             .addDropdown(async (dropdown) => {
-                dropdown.addOption('Past Year', 'Past Year');
+                dropdown.addOption('Past year', 'Past year');
 
                 const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.metricType);
 
