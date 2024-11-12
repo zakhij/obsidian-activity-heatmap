@@ -6,7 +6,7 @@ A plugin for [Obsidian](https://obsidian.md) that provides a GitHub-style activi
 
 ## How it works
 
-The plugin periodically takes a snapshot of the files in the vault, storing values on local and comparing them to the previous snapshot to gauge activity. Currently, two metrics are tracked as proxies for activity: file size and word count. The heatmap is updated automatically in the background and available as a ribbon icon or through the command palette, displaying the activity data over the designated time period.
+The plugin monitors activity metrics for all vault files. Upon each file change, it logs new values and compares them to previous checkpoint values to gauge activity. Currently, two metrics are tracked as proxies for activity: file size and word count. The heatmap is updated automatically in the background and available as a ribbon icon or through the command palette, displaying the activity data over the designated time period.
 
 
 ## Usage
@@ -26,9 +26,14 @@ In the heatmap view, you can:
 - Hover over cells to see detailed activity information
 
 
-
 ### Installation
-Manual installation is currently the only supported method. Please download the files in the latest release and put them under .obsidian/plugins/obsidian-activity-heatmap/ in your vault. Then, open your Obsidian settings > Community plugins, and turn on Activity Heatmap.
+The plugin is available in the Obsidian community plugins list.
+- Open Community Plugins settings page, click on the Browse button.
+- Search for "Activity Heatmap" in the search bar and find this plugin.
+- Click on the Install button.
+- Enable the Activity Heatmap plugin.
+
+For manual installation, please download the files in the latest release and put them under .obsidian/plugins/activity-heatmap/ in your vault. Then, open your Obsidian settings > Community plugins, and turn on Activity Heatmap.
 
 
 ### Contributing
