@@ -1,9 +1,8 @@
 import { ActivityHeatmapSettings } from './types';
 
-
+export const METRIC_TYPES = ['fileSize', 'wordCount'] as const;
 
 export const DEFAULT_SETTINGS: ActivityHeatmapSettings = {
-    metricType: 'fileSize',
-    updateIntervalSeconds: 5,
-    year: new Date().getFullYear().toString(),
-};
+    metricType: METRIC_TYPES[0],
+    year: "Past year"
+} as const;

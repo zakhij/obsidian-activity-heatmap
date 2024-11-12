@@ -1,8 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian'
 import ActivityHeatmapPlugin from './main'
-import { ActivityHeatmapSettings } from './types';
 import { DEV_BUILD } from './config';
-
 
 export class ActivityHeatmapSettingTab extends PluginSettingTab {
 	plugin: ActivityHeatmapPlugin;
@@ -14,22 +12,11 @@ export class ActivityHeatmapSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const {containerEl} = this;
-
 		containerEl.empty();
 
-		new Setting(containerEl)
-            .setName('Metric type')
-            .setDesc('Choose the metric to use for the activity heatmap')
-            .addDropdown(dropdown => dropdown
-                .addOption('fileSize', 'File size')
-                .addOption('wordCount', 'Word count')
-                .setValue(this.plugin.settings.metricType)
-                .onChange(async (value) => {
-                    this.plugin.settings.metricType = value as ActivityHeatmapSettings['metricType'];
-                    await this.plugin.saveSettings();
-                })
-            );
-		
+		containerEl.createEl('p', {
+			text: 'Metric type and year options are available directly in the heatmap modal.'
+		});
 
 		if (DEV_BUILD) {
 			new Setting(containerEl)
