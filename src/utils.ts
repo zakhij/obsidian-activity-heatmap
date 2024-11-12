@@ -27,7 +27,7 @@ export function calculateDateRange(year: string) {
     const startDate = new Date();
     let range: number;
 
-    if (year === 'Past Year') {
+    if (year === 'Past year') {
         startDate.setFullYear(startDate.getFullYear() - 1);
         range = 13;
     } else {
