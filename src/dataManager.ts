@@ -1,58 +1,27 @@
-import type { ActivityHeatmapData} from './types'
 import type ActivityHeatmapPlugin from './main'
 import { MetricManager } from './metricManager';
-import { ActivityData } from './types';
+import { ActivityData, MetricType, ActivityHeatmapData } from './types';
 import { DEV_BUILD } from './config';
-import type { MetricType } from './types'
 import { getCurrentDate, createMockData } from './utils'
 import { TFile } from 'obsidian';
+import { METRIC_TYPES } from './constants';
 
 /**
  * Manages activity heatmap data for the plugin.
  */
 export class ActivityHeatmapDataManager {
-    private data: ActivityHeatmapData;
     private metricManager: MetricManager;
+    private data: ActivityHeatmapData;
+
 
     /**
      * Creates an instance of ActivityHeatmapDataManager.
      * @param plugin - The main plugin instance.
-     * @param loadedData - The initial activity heatmap data.
+     * @param loadedData - The activity heatmap data loaded from disk. 
      */
     constructor(private plugin: ActivityHeatmapPlugin, loadedData: ActivityHeatmapData) {
-        this.data = loadedData;
         this.metricManager = new MetricManager(plugin);
-    }
-
-    /**
-     * Updates metrics for all files and saves the data. Currently not in use.
-     */
-    async updateMetrics() {
-        const today = getCurrentDate();
-        const files = this.plugin.app.vault.getMarkdownFiles();
-
-        const metricTypes: MetricType[] = ['fileSize', 'wordCount'];
-
-        for (const metricType of metricTypes) {
-            const { checkpoint, activity } = await this.metricManager.calculateMetrics(metricType, files, this.data, today);
-            this.data.checkpoints[metricType] = checkpoint;
-            this.data.activityOverTime[metricType] = activity;
-        }
-
-        await this.plugin.saveData(this.data);
-    }
-
-    /**
-     * Retrieves activity heatmap data for a specific metric type.
-     * @param metricType - The type of metric to retrieve data for.
-     * @returns A promise that resolves to the activity data.
-     */
-    async getActivityHeatmapData(metricType: MetricType): Promise<ActivityData> {
-        if (DEV_BUILD && this.plugin.settings.useMockData) {
-            console.log("Using mock data");
-            return createMockData();
-        }
-        return this.data.activityOverTime[metricType];
+        this.data = loadedData;
     }
 
     /**
@@ -64,9 +33,8 @@ export class ActivityHeatmapDataManager {
      */
     async updateMetricsForFile(file: TFile) {
         const today = getCurrentDate();
-        const metricTypes: MetricType[] = ['fileSize', 'wordCount'];
 
-        for (const metricType of metricTypes) {
+        for (const metricType of METRIC_TYPES) {
             const { checkpoint, activity } = await this.metricManager.calculateMetricsForFile(
                 metricType,
                 file,
@@ -93,9 +61,7 @@ export class ActivityHeatmapDataManager {
      * @param filePath - The path of the file that was deleted
      */
     async removeFileMetrics(filePath: string) {
-        const metricTypes: MetricType[] = ['fileSize', 'wordCount'];
-
-        for (const metricType of metricTypes) {
+        for (const metricType of METRIC_TYPES) {
             if (this.data.checkpoints[metricType]) {
                 delete this.data.checkpoints[metricType][filePath];
             }
@@ -103,4 +69,50 @@ export class ActivityHeatmapDataManager {
 
         await this.plugin.saveData(this.data);
     }
+
+    /**
+     * Retrieves activity heatmap data for a specific metric type.
+     * @param metricType - The type of metric to retrieve data for.
+     * @returns A promise that resolves to the activity data.
+     */
+    async getActivityHeatmapData(metricType: MetricType): Promise<ActivityData> {
+        if (DEV_BUILD && this.plugin.settings.useMockData) {
+            console.log("Using mock data");
+            return createMockData();
+        }
+        return this.data.activityOverTime[metricType];
+    }
+
+    // async loadActivityHeatmapData(): Promise<ActivityHeatmapData> {
+	// 	const loadedData = await this.plugin.loadData();
+		
+	// 	const emptyFrame: ActivityHeatmapData = {
+	// 		checkpoints: METRIC_TYPES.reduce((acc, metric) => ({
+	// 			...acc,
+	// 			[metric]: {} as Record<string, number>
+	// 		}), {} as Record<MetricType, Record<string, number>>),
+	// 		activityOverTime: METRIC_TYPES.reduce((acc, metric) => ({
+	// 			...acc,
+	// 			[metric]: {} as Record<string, number>
+	// 		}), {} as Record<MetricType, Record<string, number>>)
+	// 	};
+
+	// 	// For new users (no data.json)
+	// 	if (!loadedData) return emptyFrame;
+
+	// 	// Case 2: Missing or malformed activity heatmap data in data.json
+	// 	if (!loadedData.checkpoints || !loadedData.activityOverTime) return emptyFrame;
+
+	// 	// Case 3 & 4: Pre-existing activity heatmap data with potentially missing metric types
+	// 	return {
+	// 		checkpoints: {
+	// 			...emptyFrame.checkpoints,
+	// 			...loadedData.checkpoints
+	// 		},
+	// 		activityOverTime: {
+	// 			...emptyFrame.activityOverTime,
+	// 			...loadedData.activityOverTime
+	// 		}
+	// 	};
+	// }
 }

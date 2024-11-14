@@ -1,7 +1,7 @@
 import { Plugin } from 'obsidian';
-import type { ActivityHeatmapSettings } from './types'
+import type { ActivityHeatmapData, ActivityHeatmapSettings, MetricType } from './types'
 import { ActivityHeatmapDataManager } from './dataManager'
-import { DEFAULT_SETTINGS } from './constants'
+import { DEFAULT_SETTINGS, METRIC_TYPES } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
@@ -11,14 +11,14 @@ import { TFile } from 'obsidian';
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
 	dataManager: ActivityHeatmapDataManager;
-	private updateInterval: number;
 
 	async onload() {
-		await this.loadSettings();
 		console.log("Loading ActivityHeatmapPlugin");
-		this.dataManager = new ActivityHeatmapDataManager(this,await this.loadData() ?? { checkpoints: {}, activityOverTime: {} });
 
+		await this.loadSettings();
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
+
+		this.dataManager = new ActivityHeatmapDataManager(this, await this.loadData() ?? { checkpoints: {}, activityOverTime: {} });
 
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
@@ -52,7 +52,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 			}
 		});
 
-		this.addRibbonIcon('calendar', 'Open heatmap', (evt: MouseEvent) => {
+		this.addRibbonIcon('calendar', 'Open activity heatmap', (evt: MouseEvent) => {
 			new HeatmapModal(this.app, this).open();
 		});
 
@@ -60,9 +60,6 @@ export default class ActivityHeatmapPlugin extends Plugin {
 
 	async onunload() {
 		console.log("Unloading ActivityHeatmapPlugin");
-		if (this.updateInterval) {
-			window.clearInterval(this.updateInterval);
-		}
 	}
 
 	async loadSettings() {
@@ -73,7 +70,12 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		const activityData = await this.loadData();
+		const dataToSave = {
+			...activityData,
+			...this.settings
+		};
+		await this.saveData(dataToSave);
 	}
 
 }

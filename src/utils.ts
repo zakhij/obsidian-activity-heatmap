@@ -103,12 +103,3 @@ export function calculateAbsoluteDifference(current: number, previous: number | 
     }
     return Math.abs(current - previous);
 }
-
-/**
- * Checks if it's the first checkpoint for a metric.
- * @param checkpoints - The checkpoints data for a metric.
- * @returns True if it's the first checkpoint, false otherwise.
- */
-export function isFirstCheckpoint(checkpoints: CheckpointData | undefined): boolean {
-    return !checkpoints || Object.keys(checkpoints).length === 0;
-}

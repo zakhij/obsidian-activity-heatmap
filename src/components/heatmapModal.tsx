@@ -40,8 +40,8 @@ export class HeatmapModal extends Modal {
         new Setting(settingsContainer)
             .setName('Metric type')
             .addDropdown(dropdown => dropdown
-                .addOption('fileSize', 'File size')
                 .addOption('wordCount', 'Word count')
+                .addOption('fileSize', 'File size')
                 .setValue(this.plugin.settings.metricType)
                 .onChange(async (value) => {
                     this.plugin.settings.metricType = value as ActivityHeatmapSettings['metricType'];

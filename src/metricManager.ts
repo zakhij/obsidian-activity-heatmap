@@ -50,45 +50,6 @@ export class MetricManager {
         return content.split(/\s+/).length;
     }
 
-    /**
-     * Calculates metrics for all files and updates the activity data. Currently not in use.
-     * @param metricName - The name of the metric to calculate.
-     * @param files - An array of files to process.
-     * @param latestData - The current activity heatmap data.
-     * @param dateToday - The current date as a string.
-     * @returns A promise that resolves to the updated checkpoint and activity data.
-     */
-    async calculateMetrics(metricName: MetricType, files: TFile[], latestData: ActivityHeatmapData, dateToday: string): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
-        const calculator = this.metricCalculators[metricName];
-        if (!calculator) {
-            throw new Error(`No calculator found for metric: ${metricName}`);
-        }
-
-        const checkpoint: CheckpointData = {};
-        const activity: ActivityData = { ...latestData.activityOverTime[metricName] };
-        let absoluteDifferenceSum = 0;
-        const isFirstCheckpointForMetric = isFirstCheckpoint(latestData.checkpoints[metricName]);
-
-        for (const file of files) {
-            try {
-                const metricValue = await calculator(file);
-                checkpoint[file.path] = metricValue;
-
-                if (!isFirstCheckpointForMetric) {
-                    const previousValue = latestData.checkpoints[metricName]?.[file.path];
-                    absoluteDifferenceSum += calculateAbsoluteDifference(metricValue, previousValue);
-                }
-            } catch (error) {
-                console.error(`Error calculating ${metricName} for file ${file.path}:`, error);
-            }
-        }
-
-        if (!isFirstCheckpointForMetric) {
-            activity[dateToday] = (activity[dateToday] || 0) + absoluteDifferenceSum;
-        }
-
-        return { checkpoint, activity };
-    }
 
     /**
      * Calculates metrics for a single file and updates the activity data.
@@ -111,6 +72,7 @@ export class MetricManager {
         if (!calculator) {
             throw new Error(`No calculator found for metric: ${metricName}`);
         }
+
 
         const checkpoint: CheckpointData = {};
         const activity: ActivityData = { ...latestData.activityOverTime[metricName] };
