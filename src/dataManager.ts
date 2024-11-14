@@ -47,7 +47,6 @@ export class ActivityHeatmapDataManager {
                 ...this.data.checkpoints[metricType],
                 [file.path]: checkpoint[file.path]
             };
-            
             this.data.activityOverTime[metricType] = activity;
         }
 

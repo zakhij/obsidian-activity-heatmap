@@ -1,7 +1,7 @@
 import type { ActivityHeatmapData, CheckpointData, ActivityData, MetricType } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
-import { calculateAbsoluteDifference, isFirstCheckpoint } from './utils';
+import { calculateAbsoluteDifference} from './utils';
 
 type MetricCalculator = (file: TFile) => number | Promise<number>;
 
@@ -81,7 +81,7 @@ export class MetricManager {
             const metricValue = await calculator(file);
             checkpoint[file.path] = metricValue;
 
-            if (latestData.checkpoints[metricName]) {
+            if (latestData.checkpoints[metricName] && file.path in latestData.checkpoints[metricName]) {
                 const previousValue = latestData.checkpoints[metricName][file.path];
                 const absoluteDifference = calculateAbsoluteDifference(metricValue, previousValue);
                 activity[dateToday] = (activity[dateToday] || 0) + absoluteDifference;
