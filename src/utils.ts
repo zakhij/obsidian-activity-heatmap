@@ -1,4 +1,49 @@
-import { ActivityData, CheckpointData } from './types';
+import { ActivityData, ActivityHeatmapData, CheckpointData } from './types';
+import { METRIC_TYPES } from './constants';
+
+
+/**
+ * Type guard for CheckpointData (Record<FilePath, number>)
+ */
+export function isCheckpointData(data: any): data is CheckpointData {
+    if (typeof data !== 'object' || data === null) return false;
+    
+    return Object.entries(data).every(([path, value]) => 
+        typeof path === 'string' && typeof value === 'number'
+    );
+}
+
+/**
+ * Type guard for ActivityData (Record<DateString, number>)
+ */
+export function isActivityData(data: any): data is ActivityData {
+    if (typeof data !== 'object' || data === null) return false;
+    
+    return Object.entries(data).every(([date, value]) => 
+        typeof value === 'number' && !isNaN(Date.parse(date))
+    );
+}
+
+/**
+ * Type guard for ActivityHeatmapData
+ */
+export function isActivityHeatmapData(data: any): data is ActivityHeatmapData {
+    if (!data || typeof data !== 'object') return false;
+    
+    if (!data.checkpoints || !data.activityOverTime) return false;
+    
+    // Validate checkpoints
+    for (const metric of METRIC_TYPES) {
+        if (!isCheckpointData(data.checkpoints[metric])) return false;
+    }
+
+    // Validate activity data
+    for (const metric of METRIC_TYPES) {
+        if (!isActivityData(data.activityOverTime[metric])) return false;
+    }
+
+    return true;
+}
 
 /**
  * Converts the activity data object into an array of date-value pairs.
