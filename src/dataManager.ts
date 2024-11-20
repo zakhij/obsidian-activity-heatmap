@@ -17,7 +17,7 @@ export class ActivityHeatmapDataManager {
     /**
      * Creates an instance of ActivityHeatmapDataManager.
      * @param plugin - The main plugin instance.
-     * @param loadedData - The activity heatmap data loaded from disk. 
+     * @param loadedData - The parsed activity heatmap data from the data.json file.
      */
     constructor(private plugin: ActivityHeatmapPlugin, loadedData: ActivityHeatmapData) {
         this.metricManager = new MetricManager(plugin);
@@ -82,36 +82,4 @@ export class ActivityHeatmapDataManager {
         return this.data.activityOverTime[metricType];
     }
 
-    // async loadActivityHeatmapData(): Promise<ActivityHeatmapData> {
-	// 	const loadedData = await this.plugin.loadData();
-		
-	// 	const emptyFrame: ActivityHeatmapData = {
-	// 		checkpoints: METRIC_TYPES.reduce((acc, metric) => ({
-	// 			...acc,
-	// 			[metric]: {} as Record<string, number>
-	// 		}), {} as Record<MetricType, Record<string, number>>),
-	// 		activityOverTime: METRIC_TYPES.reduce((acc, metric) => ({
-	// 			...acc,
-	// 			[metric]: {} as Record<string, number>
-	// 		}), {} as Record<MetricType, Record<string, number>>)
-	// 	};
-
-	// 	// For new users (no data.json)
-	// 	if (!loadedData) return emptyFrame;
-
-	// 	// Case 2: Missing or malformed activity heatmap data in data.json
-	// 	if (!loadedData.checkpoints || !loadedData.activityOverTime) return emptyFrame;
-
-	// 	// Case 3 & 4: Pre-existing activity heatmap data with potentially missing metric types
-	// 	return {
-	// 		checkpoints: {
-	// 			...emptyFrame.checkpoints,
-	// 			...loadedData.checkpoints
-	// 		},
-	// 		activityOverTime: {
-	// 			...emptyFrame.activityOverTime,
-	// 			...loadedData.activityOverTime
-	// 		}
-	// 	};
-	// }
 }

@@ -6,7 +6,7 @@ import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
 import { TFile } from 'obsidian';
-
+import { isActivityHeatmapData } from './utils';
 
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
@@ -18,7 +18,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
-		this.dataManager = new ActivityHeatmapDataManager(this, await this.loadData() ?? { checkpoints: {}, activityOverTime: {} });
+		this.dataManager = new ActivityHeatmapDataManager(this, await this.parseActivityData());
 
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
@@ -31,6 +31,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('create', (file) => {
 				if (file instanceof TFile && file.extension === 'md') {
+					console.log("Creating file", file.path);
 					this.dataManager.updateMetricsForFile(file);
 				}
 			})
@@ -69,6 +70,9 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		}
 	}
 
+	/**
+	 * Saves the settings to the data.json file (without overwriting activity data)
+	 */
 	async saveSettings() {
 		const activityData = await this.loadData();
 		const dataToSave = {
@@ -76,6 +80,41 @@ export default class ActivityHeatmapPlugin extends Plugin {
 			...this.settings
 		};
 		await this.saveData(dataToSave);
+	}
+
+	/**
+	 * Parses the activity data from the plugin's data.json file.
+	 * @returns The parsed activity data.
+	 */
+	async parseActivityData(): Promise<ActivityHeatmapData> {
+		const loadedData = await this.loadData();
+
+		const emptyFrame: ActivityHeatmapData = {
+			checkpoints: METRIC_TYPES.reduce((acc, metric) => ({
+				...acc,
+				[metric]: {} as Record<string, number>
+			}), {} as Record<MetricType, Record<string, number>>),
+			activityOverTime: METRIC_TYPES.reduce((acc, metric) => ({
+				...acc,
+				[metric]: {} as Record<string, number>
+			}), {} as Record<MetricType, Record<string, number>>)
+		};
+
+		// Case of new user (no data.json)
+		if (!loadedData) {
+			return emptyFrame;
+		}
+
+		// Case of invalid or malformed activity heatmap data
+		if (!isActivityHeatmapData(loadedData)) {
+			return emptyFrame;
+		}
+
+		// Correct case: extract only the ActivityHeatmapData properties
+		return {
+			checkpoints: loadedData.checkpoints,
+			activityOverTime: loadedData.activityOverTime
+		};
 	}
 
 }
