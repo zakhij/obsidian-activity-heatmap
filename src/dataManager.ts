@@ -27,7 +27,6 @@ export class ActivityHeatmapDataManager {
      * @param file - The Obsidian TFile to update metrics for
      */
     async updateMetricsForFile(file: TFile) {
-        // Queue this update to run after previous updates complete
         this.saveQueue = this.saveQueue.then(async () => {
             const today = getCurrentDate();
             const data = await this.parseActivityData();
