@@ -12,7 +12,7 @@ export class MetricManager {
     private metricCalculators: Record<MetricType, MetricCalculator>;
 
     /**
-     * Creates an instance of MetricManager.
+     * Creates an instance of MetricManager, which is responsible for calculating metrics for files.
      * @param plugin - The main plugin instance.
      */
     constructor(private plugin: ActivityHeatmapPlugin) {
