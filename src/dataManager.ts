@@ -12,6 +12,7 @@ import { isActivityHeatmapData } from './utils';
  */
 export class ActivityHeatmapDataManager {
     private metricManager: MetricManager;
+    private saveQueue: Promise<void> = Promise.resolve();
 
     /**
      * Creates an instance of ActivityHeatmapDataManager, which is responsible for reads/writes of activity heatmap data to disk.
@@ -26,25 +27,31 @@ export class ActivityHeatmapDataManager {
      * @param file - The Obsidian TFile to update metrics for
      */
     async updateMetricsForFile(file: TFile) {
-        const today = getCurrentDate();
-        const data = await this.parseActivityData();
-
-        for (const metricType of METRIC_TYPES) {
-            const { checkpoint, activity } = await this.metricManager.calculateMetricsForFile(
-                metricType,
-                file,
-                data,
-                today
-            );
+        // Queue this update to run after previous updates complete
+        this.saveQueue = this.saveQueue.then(async () => {
+            const today = getCurrentDate();
+            const data = await this.parseActivityData();
             
-            data.checkpoints[metricType] = {
-                ...data.checkpoints[metricType],
-                [file.path]: checkpoint[file.path]
-            };
-            data.activityOverTime[metricType] = activity;
-        }
-
-        await this.plugin.saveData(data);
+            for (const metricType of METRIC_TYPES) {
+                const { checkpoint, activity } = await this.metricManager.calculateMetricsForFile(
+                    metricType,
+                    file,
+                    data,
+                    today
+                );
+                
+                data.checkpoints[metricType] = {
+                    ...data.checkpoints[metricType],
+                    [file.path]: checkpoint[file.path]
+                };
+                data.activityOverTime[metricType] = activity;
+            }
+            
+            await this.plugin.saveData(data);
+        });
+        
+        // Wait for this update to complete
+        await this.saveQueue;
     }
 
     /**
@@ -60,6 +67,20 @@ export class ActivityHeatmapDataManager {
         }
 
         await this.plugin.saveData(data);
+    }
+
+    /**
+     * Retrieves activity heatmap data for a specific metric type.
+     * @param metricType - The type of metric to retrieve data for.
+     * @returns A promise that resolves to the activity data.
+     */
+    async getActivityHeatmapData(metricType: MetricType): Promise<ActivityData> {
+        if (DEV_BUILD && this.plugin.settings.useMockData) {
+            console.log("Using mock data");
+            return createMockData();
+        }
+        const data = await this.parseActivityData();
+        return data.activityOverTime[metricType];
     }
 
     /**
@@ -97,19 +118,4 @@ export class ActivityHeatmapDataManager {
 			activityOverTime: loadedData.activityOverTime
 		};
 	}
-
-    /**
-     * Retrieves activity heatmap data for a specific metric type.
-     * @param metricType - The type of metric to retrieve data for.
-     * @returns A promise that resolves to the activity data.
-     */
-    async getActivityHeatmapData(metricType: MetricType): Promise<ActivityData> {
-        if (DEV_BUILD && this.plugin.settings.useMockData) {
-            console.log("Using mock data");
-            return createMockData();
-        }
-        const data = await this.parseActivityData();
-        return data.activityOverTime[metricType];
-    }
-
 }
