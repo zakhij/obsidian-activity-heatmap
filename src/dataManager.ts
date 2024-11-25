@@ -1,6 +1,6 @@
 import type ActivityHeatmapPlugin from './main'
 import { MetricManager } from './metricManager';
-import { ActivityData, MetricType, ActivityHeatmapData } from './types';
+import { ActivityData, MetricType, ActivityHeatmapData, CheckpointData } from './types';
 import { DEV_BUILD } from './config';
 import { getCurrentDate, createMockData } from './utils'
 import { TFile } from 'obsidian';
@@ -28,7 +28,6 @@ export class ActivityHeatmapDataManager {
      */
     async updateMetricsForFile(file: TFile) {
         this.saveQueue = this.saveQueue.then(async () => {
-            const today = getCurrentDate();
             const data = await this.parseActivityData();
             
             for (const metricType of METRIC_TYPES) {
@@ -36,9 +35,8 @@ export class ActivityHeatmapDataManager {
                     metricType,
                     file,
                     data,
-                    today
                 );
-                
+                                
                 data.checkpoints[metricType] = {
                     ...data.checkpoints[metricType],
                     [file.path]: checkpoint[file.path]
@@ -49,7 +47,6 @@ export class ActivityHeatmapDataManager {
             await this.plugin.saveData(data);
         });
         
-        // Wait for this update to complete
         await this.saveQueue;
     }
 
@@ -93,8 +90,8 @@ export class ActivityHeatmapDataManager {
 		const emptyFrame: ActivityHeatmapData = {
 			checkpoints: METRIC_TYPES.reduce((acc, metric) => ({
 				...acc,
-				[metric]: {} as Record<string, number>
-			}), {} as Record<MetricType, Record<string, number>>),
+				[metric]: {} as CheckpointData
+			}), {} as Record<MetricType, CheckpointData>),
 			activityOverTime: METRIC_TYPES.reduce((acc, metric) => ({
 				...acc,
 				[metric]: {} as Record<string, number>
