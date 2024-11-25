@@ -4,7 +4,10 @@ export type FilePath = string;
 export type DateString = string; // Format: YYYY-MM-DD
 export type MetricType = typeof METRIC_TYPES[number];
 
-export type CheckpointData = Record<FilePath, number>;
+export type CheckpointData = Record<FilePath, {
+    value: number;
+    mtime: number;
+}>;
 
 export type ActivityData = Record<DateString, number>;
 

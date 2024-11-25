@@ -19,19 +19,14 @@ export default class ActivityHeatmapPlugin extends Plugin {
 
 		this.dataManager = new ActivityHeatmapDataManager(this);
 
+		this.app.workspace.onLayoutReady(async () => {
+			await this.scanVault();
+		});
+
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
 				if (file instanceof TFile && file.extension === 'md') {
-					this.dataManager.updateMetricsForFile(file);
-				}
-			})
-		);
-
-		this.registerEvent(
-			this.app.vault.on('create', (file) => {
-				if (file instanceof TFile && file.extension === 'md') {
-					console.log("Creating file", file.path);
-					this.dataManager.updateMetricsForFile(file);
+					this.dataManager.updateMetricsForFile(file, false);
 				}
 			})
 		);
@@ -79,6 +74,18 @@ export default class ActivityHeatmapPlugin extends Plugin {
 			...this.settings
 		};
 		await this.saveData(dataToSave);
+	}
+
+	/**
+	 * Upon plugin init, does an initial scan of the vault to update the metrics for all existing files
+	 */
+	async scanVault() {
+		const markdownFiles = this.app.vault.getMarkdownFiles();
+		const data = await this.loadData();
+		const isFirstTimeUpdate = !data;
+		for (const file of markdownFiles) {
+			await this.dataManager.updateMetricsForFile(file, isFirstTimeUpdate);
+		}
 	}
 }
 

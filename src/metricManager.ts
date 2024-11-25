@@ -1,7 +1,7 @@
 import type { ActivityHeatmapData, CheckpointData, ActivityData, MetricType } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
-import { calculateAbsoluteDifference} from './utils';
+import { calculateAbsoluteDifference, getDateStringFromTimestamp } from './utils';
 
 type MetricCalculator = (file: TFile) => number | Promise<number>;
 
@@ -59,32 +59,37 @@ export class MetricManager {
      * @param metricName - The type of metric to calculate (e.g., 'fileSize', 'wordCount')
      * @param file - The Obsidian TFile to calculate metrics for
      * @param latestData - The current state of all activity heatmap data
-     * @param dateToday - The current date in string format
+     * @param isFirstTimeUpdate - Whether this is a first-time update (i.e. no existing data.json file)
      * @returns An object containing the updated checkpoint and activity data
      */
     async calculateMetricsForFile(
         metricName: MetricType,
         file: TFile,
         latestData: ActivityHeatmapData,
-        dateToday: string
+        isFirstTimeUpdate: boolean
     ): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
         const calculator = this.metricCalculators[metricName];
         if (!calculator) {
             throw new Error(`No calculator found for metric: ${metricName}`);
         }
 
-
         const checkpoint: CheckpointData = {};
         const activity: ActivityData = { ...latestData.activityOverTime[metricName] };
         
         try {
             const metricValue = await calculator(file);
-            checkpoint[file.path] = metricValue;
+            checkpoint[file.path] = {
+                value: metricValue,
+                mtime: file.stat.mtime
+            };
 
-            if (latestData.checkpoints[metricName] && file.path in latestData.checkpoints[metricName]) {
-                const previousValue = latestData.checkpoints[metricName][file.path];
-                const absoluteDifference = calculateAbsoluteDifference(metricValue, previousValue);
-                activity[dateToday] = (activity[dateToday] || 0) + absoluteDifference;
+            if (!isFirstTimeUpdate) {
+                let absoluteDifference = metricValue;
+                if (latestData.checkpoints[metricName] && file.path in latestData.checkpoints[metricName]) {
+                    const previousRecord = latestData.checkpoints[metricName][file.path];
+                    absoluteDifference = calculateAbsoluteDifference(metricValue, previousRecord.value);
+                }
+                activity[getDateStringFromTimestamp(file.stat.mtime)] = (activity[getDateStringFromTimestamp(file.stat.mtime)] || 0) + absoluteDifference;
             }
         } catch (error) {
             console.error(`Error calculating ${metricName} for file ${file.path}:`, error);

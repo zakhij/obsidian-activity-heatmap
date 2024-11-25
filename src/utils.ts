@@ -3,13 +3,19 @@ import { METRIC_TYPES } from './constants';
 
 
 /**
- * Type guard for CheckpointData (Record<FilePath, number>)
+ * Type guard for CheckpointData (Record<FilePath, { value: number, mtime: number }>)
  */
 export function isCheckpointData(data: any): data is CheckpointData {
     if (typeof data !== 'object' || data === null) return false;
     
-    return Object.entries(data).every(([path, value]) => 
-        typeof path === 'string' && typeof value === 'number'
+    return Object.entries(data).every(([path, record]) => 
+        typeof path === 'string' && 
+        typeof record === 'object' &&
+        record !== null &&
+        'value' in record &&
+        'mtime' in record &&
+        typeof (record as any).value === 'number' &&
+        typeof (record as any).mtime === 'number'
     );
 }
 
@@ -147,4 +153,13 @@ export function calculateAbsoluteDifference(current: number, previous: number | 
         return current;
     }
     return Math.abs(current - previous);
+}
+
+/**
+ * Converts a timestamp to a date string.
+ * @param timestamp - The timestamp to convert.
+ * @returns The date string.
+ */
+export function getDateStringFromTimestamp(timestamp: number): string {
+    return new Date(timestamp).toISOString().split('T')[0];
 }
