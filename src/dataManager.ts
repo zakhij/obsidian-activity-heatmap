@@ -25,8 +25,9 @@ export class ActivityHeatmapDataManager {
     /**
      * Updates metrics for a single file and saves the data.
      * @param file - The Obsidian TFile to update metrics for
+     * @param isFirstTimeUpdate - Whether this is a first-time update (i.e. no existing data.json file)
      */
-    async updateMetricsForFile(file: TFile) {
+    async updateMetricsForFile(file: TFile, isFirstTimeUpdate: boolean) {
         this.saveQueue = this.saveQueue.then(async () => {
             const data = await this.parseActivityData();
             
@@ -35,6 +36,7 @@ export class ActivityHeatmapDataManager {
                     metricType,
                     file,
                     data,
+                    isFirstTimeUpdate
                 );
                                 
                 data.checkpoints[metricType] = {

@@ -59,13 +59,14 @@ export class MetricManager {
      * @param metricName - The type of metric to calculate (e.g., 'fileSize', 'wordCount')
      * @param file - The Obsidian TFile to calculate metrics for
      * @param latestData - The current state of all activity heatmap data
-     * @param dateToday - The current date in string format
+     * @param isFirstTimeUpdate - Whether this is a first-time update (i.e. no existing data.json file)
      * @returns An object containing the updated checkpoint and activity data
      */
     async calculateMetricsForFile(
         metricName: MetricType,
         file: TFile,
         latestData: ActivityHeatmapData,
+        isFirstTimeUpdate: boolean
     ): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
         const calculator = this.metricCalculators[metricName];
         if (!calculator) {
@@ -82,9 +83,12 @@ export class MetricManager {
                 mtime: file.stat.mtime
             };
 
-            if (latestData.checkpoints[metricName] && file.path in latestData.checkpoints[metricName]) {
-                const previousRecord = latestData.checkpoints[metricName][file.path];
-                const absoluteDifference = calculateAbsoluteDifference(metricValue, previousRecord.value);
+            if (!isFirstTimeUpdate) {
+                let absoluteDifference = metricValue;
+                if (latestData.checkpoints[metricName] && file.path in latestData.checkpoints[metricName]) {
+                    const previousRecord = latestData.checkpoints[metricName][file.path];
+                    absoluteDifference = calculateAbsoluteDifference(metricValue, previousRecord.value);
+                }
                 activity[getDateStringFromTimestamp(file.stat.mtime)] = (activity[getDateStringFromTimestamp(file.stat.mtime)] || 0) + absoluteDifference;
             }
         } catch (error) {

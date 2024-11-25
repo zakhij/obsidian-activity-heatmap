@@ -26,7 +26,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
 				if (file instanceof TFile && file.extension === 'md') {
-					this.dataManager.updateMetricsForFile(file);
+					this.dataManager.updateMetricsForFile(file, false);
 				}
 			})
 		);
@@ -81,8 +81,10 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	 */
 	async scanVault() {
 		const markdownFiles = this.app.vault.getMarkdownFiles();
+		const data = await this.loadData();
+		const isFirstTimeUpdate = !data;
 		for (const file of markdownFiles) {
-			await this.dataManager.updateMetricsForFile(file);
+			await this.dataManager.updateMetricsForFile(file, isFirstTimeUpdate);
 		}
 	}
 }
