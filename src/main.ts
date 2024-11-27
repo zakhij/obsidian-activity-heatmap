@@ -34,7 +34,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('delete', (file) => {
 				if (file instanceof TFile && file.extension === 'md') {
-					this.dataManager.removeFileMetrics(file.path);
+					this.dataManager.removeFileData(file);
 				}
 			})
 		);
@@ -81,11 +81,19 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	 */
 	async scanVault() {
 		const markdownFiles = this.app.vault.getMarkdownFiles();
-		const data = await this.loadData();
-		const isFirstTimeUpdate = !data;
+		const isFirstTime = await this.isFirstTimeUpdate();
 		for (const file of markdownFiles) {
-			await this.dataManager.updateMetricsForFile(file, isFirstTimeUpdate);
+			await this.dataManager.updateFileData(file, isFirstTime);
 		}
+	}
+
+	/**
+	 * Checks if data.json is null (which we assume indicates first-time plugin user)
+	 * @returns true if data.json is null, false otherwise
+	 */
+	private async isFirstTimeUpdate(): Promise<boolean> {
+		const data = await this.loadData();
+		return !data;
 	}
 }
 

@@ -1,7 +1,8 @@
-import type { ActivityHeatmapData, CheckpointData, ActivityData, MetricType } from './types'
+import type { ActivityHeatmapData, ActivityOverTimeData, CheckpointData, FileMetrics, HeatmapActivityData, MetricType } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 import { calculateAbsoluteDifference, getDateStringFromTimestamp } from './utils';
+import { METRIC_TYPES } from './constants';
 
 type MetricCalculator = (file: TFile) => number | Promise<number>;
 
@@ -50,6 +51,32 @@ export class MetricManager {
         return content.split(/\s+/).length;
     }
 
+    async calculateFileMetrics(file: TFile, fileCheckpointMetrics: FileMetrics | null, 
+        activityOverTime: ActivityOverTimeData, 
+        isFirstTime: boolean): 
+        Promise<{ newFileCheckpointMetrics: FileMetrics; activityOverTime: ActivityOverTimeData}> {
+
+        const newFileCheckpointMetrics = {} as FileMetrics;
+        newFileCheckpointMetrics.mtime = file.stat.mtime;
+
+        for (const metricType of METRIC_TYPES) {
+            const calculator = this.metricCalculators[metricType];
+            const metricValue = await calculator(file);
+            newFileCheckpointMetrics[metricType] = metricValue;
+
+            // If this is not the first time, add this to activity over time (and cover case where file is created offline)
+            if (!isFirstTime) {
+                let absoluteDifference = metricValue;
+                if (fileCheckpointMetrics) {
+                    const previousValue = fileCheckpointMetrics[metricType];
+                    absoluteDifference = calculateAbsoluteDifference(metricValue, previousValue);
+                }
+                activityOverTime[getDateStringFromTimestamp(file.stat.mtime)][metricType] = activityOverTime[getDateStringFromTimestamp(file.stat.mtime)][metricType] + absoluteDifference;
+            }
+        }
+
+        return { newFileCheckpointMetrics, activityOverTime };
+    }
 
     /**
      * Calculates metrics for a single file and updates the activity data.

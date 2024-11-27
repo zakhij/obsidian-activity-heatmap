@@ -5,7 +5,7 @@ type DateString = string; // Format: YYYY-MM-DD
 export type MetricType = typeof METRIC_TYPES[number];
 
 
-interface FileMetrics extends Record<MetricType, number> {
+export interface FileMetrics extends Record<MetricType, number> {
     mtime: number;
 }
 
@@ -22,7 +22,7 @@ export type ActivityOverTimeDataLegacy1_0_4 = Record<MetricType, Record<DateStri
 
 export interface ActivityHeatmapData {
     version: string;
-    checkpoints: Record<MetricType, CheckpointData>;
+    checkpoints: CheckpointData;
     activityOverTime: ActivityOverTimeData;
 }
 
