@@ -1,19 +1,32 @@
 import { METRIC_TYPES } from './constants';
 
-export type FilePath = string;
-export type DateString = string; // Format: YYYY-MM-DD
+type FilePath = string;
+type DateString = string; // Format: YYYY-MM-DD
 export type MetricType = typeof METRIC_TYPES[number];
 
-export type CheckpointData = Record<FilePath, {
-    value: number;
-    mtime: number;
-}>;
 
-export type ActivityData = Record<DateString, number>;
+interface FileMetrics extends Record<MetricType, number> {
+    mtime: number;
+}
+
+export type CheckpointData = Record<FilePath, FileMetrics>;
+
+export type CheckpointDataLegacy1_0_4 = Record<MetricType, Record<FilePath, number>>;
+
+export type ActivityOverTimeData = Record<DateString, Record<MetricType, number>>;
+
+export type ActivityOverTimeDataLegacy1_0_4 = Record<MetricType, Record<DateString, number>>;
+
 
 export interface ActivityHeatmapData {
+    version: string;
     checkpoints: Record<MetricType, CheckpointData>;
-    activityOverTime: Record<MetricType, ActivityData>;
+    activityOverTime: ActivityOverTimeData;
+}
+
+export interface ActivityHeatmapDataLegacy1_0_4 {
+    checkpoints: CheckpointDataLegacy1_0_4;
+    activityOverTime: ActivityOverTimeDataLegacy1_0_4;
 }
 
 export interface ActivityHeatmapSettings {
