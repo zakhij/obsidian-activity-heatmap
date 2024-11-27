@@ -1,62 +1,85 @@
-import { ActivityData, ActivityHeatmapData, CheckpointData } from './types';
+import { ActivityOverTimeData, MetricType, ActivityOverTimeDataLegacy1_0_4, ActivityHeatmapData, CheckpointData, CheckpointDataLegacy1_0_4, HeatmapActivityData } from './types';
 import { METRIC_TYPES } from './constants';
 
 
 /**
- * Type guard for CheckpointData (Record<FilePath, { value: number, mtime: number }>)
+ * Type guard for CheckpointData (Record<FilePath, FileMetrics>)
  */
 export function isCheckpointData(data: any): data is CheckpointData {
     if (typeof data !== 'object' || data === null) return false;
     
-    return Object.entries(data).every(([path, record]) => 
-        typeof path === 'string' && 
-        typeof record === 'object' &&
-        record !== null &&
-        'value' in record &&
-        'mtime' in record &&
-        typeof (record as any).value === 'number' &&
-        typeof (record as any).mtime === 'number'
+    return Object.entries(data).every(([filePath, metrics]) => 
+        typeof filePath === 'string' &&
+        typeof metrics === 'object' &&
+        metrics !== null &&
+        'mtime' in metrics &&
+        typeof metrics.mtime === 'number' &&
+        METRIC_TYPES.every(metricType =>
+            metricType in metrics &&              
+            typeof metrics[metricType] === 'number' 
+        )
     );
 }
 
+
 /**
- * Type guard for ActivityData (Record<DateString, number>)
+ * Type guard for CheckpointDataLegacy1_0_4 (Record<MetricType, Record<FilePath, number>>)
  */
-export function isActivityData(data: any): data is ActivityData {
+export function isCheckpointDataLegacy1_0_4(data: any): data is CheckpointDataLegacy1_0_4 {
     if (typeof data !== 'object' || data === null) return false;
     
-    return Object.entries(data).every(([date, value]) => 
-        typeof value === 'number' && !isNaN(Date.parse(date))
+    return Object.entries(data).every(([metric, dateValues]) => 
+        METRIC_TYPES.includes(metric as MetricType) &&
+        typeof dateValues === 'object' &&
+        dateValues !== null &&
+        Object.entries(dateValues).every(([date, value]) =>
+            typeof value === 'number'
+        )
     );
 }
 
 /**
- * Type guard for ActivityHeatmapData
+ * Type guard for ActivityOverTimeData (Record<DateString, Record<MetricType, number>>)
  */
-export function isActivityHeatmapData(data: any): data is ActivityHeatmapData {
-    if (!data || typeof data !== 'object') return false;
+export function isActivityOverTimeData(data: any): data is ActivityOverTimeData {
+    if (typeof data !== 'object' || data === null) return false;
     
-    if (!data.checkpoints || !data.activityOverTime) return false;
-    
-    // Validate checkpoints
-    for (const metric of METRIC_TYPES) {
-        if (!isCheckpointData(data.checkpoints[metric])) return false;
-    }
-
-    // Validate activity data
-    for (const metric of METRIC_TYPES) {
-        if (!isActivityData(data.activityOverTime[metric])) return false;
-    }
-
-    return true;
+    return Object.entries(data).every(([date, metrics]) => 
+        typeof metrics === 'object' &&
+        metrics !== null &&
+        !isNaN(Date.parse(date)) &&
+        Object.entries(metrics).every(([metric, value]) =>
+            METRIC_TYPES.includes(metric as MetricType) &&
+            typeof value === 'number'
+        )
+    );
 }
+
+/**
+ * Type guard for ActivityOverTimeDataLegacy1_0_4 (Record<MetricType, Record<DateString, number>>)
+ */
+export function isActivityOverTimeDataLegacy1_0_4(data: any): data is ActivityOverTimeDataLegacy1_0_4 {
+    if (typeof data !== 'object' || data === null) return false;
+    
+    return Object.entries(data).every(([metric, dateValues]) => 
+        METRIC_TYPES.includes(metric as MetricType) &&
+        typeof dateValues === 'object' &&
+        dateValues !== null &&
+        Object.entries(dateValues).every(([date, value]) =>
+            !isNaN(Date.parse(date)) && 
+            typeof value === 'number'
+        )
+    );
+}
+
+
 
 /**
  * Converts the activity data object into an array of date-value pairs.
  * @param data - The activity data object.
  * @returns An array of objects with date and value properties.
  */
-export function convertDataToArray(data: ActivityData) {
+export function convertDataToArray(data: HeatmapActivityData) {
     return Object.entries(data).map(([date, value]) => ({ date, value }));
 }
 
@@ -128,11 +151,11 @@ export function getCurrentDate(): string {
  * @param months - Number of months to generate data for.
  * @returns Mock activity data.
  */
-export function createMockData(months: number = 15): ActivityData {
+export function createMockData(months: number = 15): HeatmapActivityData {
     const today = new Date();
     const endDate = today;
     const startDate = new Date(today.getFullYear(), today.getMonth() - months, today.getDate());
-    const mockData: ActivityData = {};
+    const mockData: HeatmapActivityData = {};
 
     for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
         const dateString = date.toISOString().split('T')[0];
