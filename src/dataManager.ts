@@ -1,8 +1,8 @@
 import type ActivityHeatmapPlugin from './main'
 import { MetricManager } from './metricManager';
-import { ActivityData, MetricType, ActivityHeatmapData, CheckpointData } from './types';
+import { ActivityData, MetricType, ActivityHeatmapData, CheckpointData, HeatmapActivityData } from './types';
 import { DEV_BUILD } from './config';
-import { getCurrentDate, createMockData } from './utils'
+import { getCurrentDate, createMockData, isActivityOverTimeData, isCheckpointData } from './utils'
 import { TFile } from 'obsidian';
 import { METRIC_TYPES } from './constants';
 import { isActivityHeatmapData } from './utils';
@@ -67,53 +67,84 @@ export class ActivityHeatmapDataManager {
         await this.plugin.saveData(data);
     }
 
+
     /**
      * Retrieves activity heatmap data for a specific metric type.
+     * In case of invalid data, returns an empty activity heatmap data structure.
      * @param metricType - The type of metric to retrieve data for.
      * @returns A promise that resolves to the activity data.
      */
-    async getActivityHeatmapData(metricType: MetricType): Promise<ActivityData> {
+    async getActivityHeatmapData(metricType: MetricType): Promise<HeatmapActivityData> {
         if (DEV_BUILD && this.plugin.settings.useMockData) {
             console.log("Using mock data");
             return createMockData();
         }
-        const data = await this.parseActivityData();
-        return data.activityOverTime[metricType];
+        let data = await this.parseActivityData();
+        if (!data) {
+            data = this.getEmptyActivityHeatmapData();
+        }
+        const transformedData: HeatmapActivityData = {};
+        Object.entries(data.activityOverTime).forEach(([date, metrics]) => {
+            if (metrics[metricType]) {
+                transformedData[date] = metrics[metricType];
+            }
+        });
+        
+        return transformedData;
     }
+        
+
+    /**
+     * Constructs an empty activity heatmap data structure for heatmap display.
+     * @returns An empty activity heatmap data structure.
+     */
+    private getEmptyActivityHeatmapData(): ActivityHeatmapData {
+        return {
+            version: this.plugin.manifest.version,
+            checkpoints: METRIC_TYPES.reduce((acc, metric) => ({
+                ...acc,
+                [metric]: {} as CheckpointData
+            }), {} as Record<MetricType, CheckpointData>),
+            activityOverTime: METRIC_TYPES.reduce((acc, metric) => ({
+                ...acc,
+                [metric]: {} as Record<string, number>
+            }), {} as Record<MetricType, Record<string, number>>)
+        } as ActivityHeatmapData;
+    }
+
 
     /**
 	 * Parses the data read from disk (plugin's data.json file) into a usable format.
      * If the data is not in the expected format, it returns an empty data structure to prevent errors.
 	 * @returns The parsed activity data.
 	 */
-	async parseActivityData(): Promise<ActivityHeatmapData> {
+	async parseActivityData(): Promise<ActivityHeatmapData | null> {
 		const loadedData = await this.plugin.loadData();
 
-		const emptyFrame: ActivityHeatmapData = {
-			checkpoints: METRIC_TYPES.reduce((acc, metric) => ({
-				...acc,
-				[metric]: {} as CheckpointData
-			}), {} as Record<MetricType, CheckpointData>),
-			activityOverTime: METRIC_TYPES.reduce((acc, metric) => ({
-				...acc,
-				[metric]: {} as Record<string, number>
-			}), {} as Record<MetricType, Record<string, number>>)
-		};
+        // If data.json doesn't exist, return null.
+        if (!loadedData) {
+            return null;
+        }
 
-		// Case of new user (no data.json)
-		if (!loadedData) {
-			return emptyFrame;
-		}
+        // If version does not exist or is behind the current version, return null.
+        if (!loadedData.version || loadedData.version < this.plugin.manifest.version) {
+            return null;
+        }
 
-		// Case of invalid or malformed activity heatmap data
-		if (!isActivityHeatmapData(loadedData)) {
-			return emptyFrame;
-		}
+        // If activity is not in the expected format, return null.
+        if (!isActivityOverTimeData(loadedData.activityOverTime)) {
+            return null;
+        }
 
-		// Correct case: extract only the ActivityHeatmapData properties
-		return {
-			checkpoints: loadedData.checkpoints,
-			activityOverTime: loadedData.activityOverTime
-		};
-	}
+        // If checkpoints are not in the expected format, return null.
+        if (!isCheckpointData(loadedData.checkpoints)) {
+            return null;
+        }
+
+        return {
+            version: loadedData.version,
+            checkpoints: loadedData.checkpoints,
+            activityOverTime: loadedData.activityOverTime
+        } as ActivityHeatmapData;
+    }
 }
