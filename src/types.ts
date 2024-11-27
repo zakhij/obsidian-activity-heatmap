@@ -15,7 +15,9 @@ export type CheckpointDataLegacy1_0_4 = Record<MetricType, Record<FilePath, numb
 
 export type HeatmapActivityData = Record<DateString, number>;
 
-export type ActivityOverTimeData = Record<DateString, Record<MetricType, number>>;
+export type DateMetrics = Record<MetricType, number>;
+
+export type ActivityOverTimeData = Record<DateString, DateMetrics>;
 
 export type ActivityOverTimeDataLegacy1_0_4 = Record<MetricType, Record<DateString, number>>;
 

@@ -1,4 +1,4 @@
-import type { ActivityHeatmapData, ActivityOverTimeData, CheckpointData, FileMetrics, HeatmapActivityData, MetricType } from './types'
+import type { ActivityHeatmapData, ActivityOverTimeData, CheckpointData, DateMetrics, FileMetrics, HeatmapActivityData, MetricType } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 import { calculateAbsoluteDifference, getDateStringFromTimestamp } from './utils';
@@ -51,27 +51,43 @@ export class MetricManager {
         return content.split(/\s+/).length;
     }
 
-    async calculateFileMetrics(file: TFile, fileCheckpointMetrics: FileMetrics | null, 
+    async calculateFileMetrics(
+        file: TFile, 
+        fileCheckpointMetrics: FileMetrics | null, 
         activityOverTime: ActivityOverTimeData, 
-        isFirstTime: boolean): 
-        Promise<{ newFileCheckpointMetrics: FileMetrics; activityOverTime: ActivityOverTimeData}> {
-
+        isFirstTime: boolean
+    ): Promise<{ newFileCheckpointMetrics: FileMetrics; activityOverTime: ActivityOverTimeData}> {
+        
         const newFileCheckpointMetrics = {} as FileMetrics;
         newFileCheckpointMetrics.mtime = file.stat.mtime;
 
         for (const metricType of METRIC_TYPES) {
             const calculator = this.metricCalculators[metricType];
+            
             const metricValue = await calculator(file);
             newFileCheckpointMetrics[metricType] = metricValue;
 
-            // If this is not the first time, add this to activity over time (and cover case where file is created offline)
+            // If this is not the first time, modify activity over time
             if (!isFirstTime) {
+                const dateString = getDateStringFromTimestamp(file.stat.mtime);
+                
+                // Initialize the date object if it doesn't exist
+                if (!activityOverTime[dateString]) {
+                    activityOverTime[dateString] = {} as DateMetrics;
+                }
+                
+                // Initialize the metric if it doesn't exist
+                if (!activityOverTime[dateString][metricType]) {
+                    activityOverTime[dateString][metricType] = 0;
+                }
+
                 let absoluteDifference = metricValue;
                 if (fileCheckpointMetrics) {
                     const previousValue = fileCheckpointMetrics[metricType];
                     absoluteDifference = calculateAbsoluteDifference(metricValue, previousValue);
                 }
-                activityOverTime[getDateStringFromTimestamp(file.stat.mtime)][metricType] = activityOverTime[getDateStringFromTimestamp(file.stat.mtime)][metricType] + absoluteDifference;
+                
+                activityOverTime[dateString][metricType] += absoluteDifference;
             }
         }
 

@@ -5,7 +5,6 @@ import { DEV_BUILD } from './config';
 import { createMockData, isActivityOverTimeData, isCheckpointData } from './utils'
 import { TFile } from 'obsidian';
 import { METRIC_TYPES } from './constants';
-import { first } from 'lodash-es';
 
 /**
  * Manages activity heatmap data for the plugin.
@@ -38,6 +37,9 @@ export class ActivityHeatmapDataManager {
                 data.checkpoints[file.path] = newFileCheckpointMetrics;
                 data.activityOverTime = activityOverTime;
                 await this.plugin.saveData(data);
+            }
+            else {
+                console.error("Not updating file data for " + file.path + " because data is invalid!");
             }
 
             
@@ -137,7 +139,16 @@ export class ActivityHeatmapDataManager {
 		const loadedData = await this.plugin.loadData();
 
         if (isFirstTime) {
-            return this.getEmptyActivityHeatmapData();
+            if (!loadedData) {
+                console.log("First time update. Returning empty data.");
+                return this.getEmptyActivityHeatmapData();
+            }
+            else {
+                console.log("First time update: Returning loaded data.");
+                return { version: loadedData.version, 
+                    checkpoints: loadedData.checkpoints, 
+                    activityOverTime: loadedData.activityOverTime } as ActivityHeatmapData;
+            }
         }
 
         // If data.json doesn't exist, return null.
@@ -147,16 +158,19 @@ export class ActivityHeatmapDataManager {
 
         // If version does not exist or is behind the current version, return null.
         if (!loadedData.version || loadedData.version < this.plugin.manifest.version) {
+            console.log("Version invalid. Returning null.");
             return null;
         }
 
         // If activity is not in the expected format, return null.
         if (!isActivityOverTimeData(loadedData.activityOverTime)) {
+            console.log("Activity over time invalid. Returning null.");
             return null;
         }
 
         // If checkpoints are not in the expected format, return null.
         if (!isCheckpointData(loadedData.checkpoints)) {
+            console.log("Checkpoints invalid. Returning null.");
             return null;
         }
 

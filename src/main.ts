@@ -26,7 +26,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
 				if (file instanceof TFile && file.extension === 'md') {
-					this.dataManager.updateMetricsForFile(file, false);
+					this.dataManager.updateFileData(file, false);
 				}
 			})
 		);
