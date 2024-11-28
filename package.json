@@ -1,6 +1,6 @@
 {
 	"name": "activity-heatmap",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "Tracks and visualizes app activity, similar to GitHub's contribution chart.",
 	"main": "main.js",
 	"scripts": {
