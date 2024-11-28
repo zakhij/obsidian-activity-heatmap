@@ -4,7 +4,6 @@ import { MetricType, ActivityHeatmapData, CheckpointData, HeatmapActivityData, A
 import { DEV_BUILD } from './config';
 import { createMockData, isActivityOverTimeData, isCheckpointData } from './utils'
 import { TFile } from 'obsidian';
-import { METRIC_TYPES } from './constants';
 
 /**
  * Manages activity heatmap data for the plugin.
@@ -23,13 +22,16 @@ export class ActivityHeatmapDataManager {
 
 
     /**
-     * Updates the data for a single file.
+     * Examines a single file's changes and determines the new checkpoint and activity over time data.
+     * Writes the updated data to disk.
+     * @param file - The Obsidian TFile to update metrics for
+     * @param isFirstTime - Whether this is a first-time user (i.e. no existing data.json file)
      */
     async updateFileData(file: TFile, isFirstTime: boolean) {
         this.saveQueue = this.saveQueue.then(async () => {
-            
-            const data = await this.parseActivityData(isFirstTime);
 
+            const data = await this.parseActivityData(isFirstTime);
+            
             if (data) {
                 const fileCheckpointMetrics = data.checkpoints[file.path];
                 const { newFileCheckpointMetrics, activityOverTime } = await this.metricManager.calculateFileMetrics(file, fileCheckpointMetrics, data.activityOverTime, isFirstTime);
@@ -45,36 +47,6 @@ export class ActivityHeatmapDataManager {
             
         });
 
-        await this.saveQueue;
-    }
-
-    /**
-     * Updates metrics for a single file and saves the data.
-     * @param file - The Obsidian TFile to update metrics for
-     * @param isFirstTimeUpdate - Whether this is a first-time update (i.e. no existing data.json file)
-     */
-    async updateMetricsForFile(file: TFile, isFirstTimeUpdate: boolean) {
-        this.saveQueue = this.saveQueue.then(async () => {
-            const data = await this.parseActivityData(false);
-            
-            for (const metricType of METRIC_TYPES) {
-                const { checkpoint, activity } = await this.metricManager.calculateMetricsForFile(
-                    metricType,
-                    file,
-                    data,
-                    isFirstTimeUpdate
-                );
-                                
-                data.checkpoints[metricType] = {
-                    ...data.checkpoints[metricType],
-                    [file.path]: checkpoint[file.path]
-                };
-                data.activityOverTime[metricType] = activity;
-            }
-            
-            await this.plugin.saveData(data);
-        });
-        
         await this.saveQueue;
     }
 
