@@ -1,8 +1,7 @@
-import type { ActivityOverTimeData, DateActivityMetrics, FileCheckpointData, FileCheckpointMetrics, MetricType } from './types'
+import type { ActivityHeatmapData, CheckpointData, ActivityData, MetricType } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 import { calculateAbsoluteDifference, getDateStringFromTimestamp } from './utils';
-import { METRIC_TYPES } from './constants';
 
 type MetricCalculator = (file: TFile) => number | Promise<number>;
 
@@ -53,50 +52,49 @@ export class MetricManager {
 
 
     /**
-     * Calculates the metrics for a single file and returns the new checkpoint metrics and updated activity over time data.
+     * Calculates metrics for a single file and updates the activity data.
+     * This method handles the calculation of a specific metric type for one file,
+     * updating both the checkpoint and activity data accordingly.
+     * 
+     * @param metricName - The type of metric to calculate (e.g., 'fileSize', 'wordCount')
      * @param file - The Obsidian TFile to calculate metrics for
-     * @param fileCheckpointMetrics - The existing checkpoint metrics for the file, if any
-     * @param activityOverTime - The existing activity over time data (may be empty)
-     * @param isFirstTime - Whether this is a first-time user (i.e. no existing data.json file)
+     * @param latestData - The current state of all activity heatmap data
+     * @param isFirstTimeUpdate - Whether this is a first-time update (i.e. no existing data.json file)
+     * @returns An object containing the updated checkpoint and activity data
      */
-    async calculateFileMetrics(
-        file: TFile, 
-        fileCheckpointMetrics: FileCheckpointMetrics | null, 
-        activityOverTime: ActivityOverTimeData, 
-        isFirstTime: boolean
-    ): Promise<{ newFileCheckpointMetrics: FileCheckpointData; activityOverTime: ActivityOverTimeData}> {
-        
-        const newFileCheckpointMetrics = {} as FileCheckpointData;
-        newFileCheckpointMetrics.mtime = file.stat.mtime;
-
-        for (const metricType of METRIC_TYPES) {
-            const calculator = this.metricCalculators[metricType];
-            
-            const metricValue = await calculator(file);
-            newFileCheckpointMetrics[metricType] = metricValue;
-
-            // If this is not the first time, modify activity over time
-            if (!isFirstTime) {
-                const dateString = getDateStringFromTimestamp(file.stat.mtime);
-                
-                // Initialize the date object if it doesn't exist
-                if (!activityOverTime[dateString]) {
-                    activityOverTime[dateString] = {} as DateActivityMetrics;
-                }
-                
-                // Initialize the metric if it doesn't exist
-                if (!activityOverTime[dateString][metricType]) {
-                    activityOverTime[dateString][metricType] = 0;
-                }
-
-                const previousValue = fileCheckpointMetrics?.[metricType];
-                const absoluteDifference = calculateAbsoluteDifference(metricValue, previousValue);
-                activityOverTime[dateString][metricType] += absoluteDifference;
-            }
+    async calculateMetricsForFile(
+        metricName: MetricType,
+        file: TFile,
+        latestData: ActivityHeatmapData,
+        isFirstTimeUpdate: boolean
+    ): Promise<{ checkpoint: CheckpointData; activity: ActivityData }> {
+        const calculator = this.metricCalculators[metricName];
+        if (!calculator) {
+            throw new Error(`No calculator found for metric: ${metricName}`);
         }
 
-        return { newFileCheckpointMetrics, activityOverTime };
-    }
+        const checkpoint: CheckpointData = {};
+        const activity: ActivityData = { ...latestData.activityOverTime[metricName] };
+        
+        try {
+            const metricValue = await calculator(file);
+            checkpoint[file.path] = {
+                value: metricValue,
+                mtime: file.stat.mtime
+            };
 
-   
+            if (!isFirstTimeUpdate) {
+                let absoluteDifference = metricValue;
+                if (latestData.checkpoints[metricName] && file.path in latestData.checkpoints[metricName]) {
+                    const previousRecord = latestData.checkpoints[metricName][file.path];
+                    absoluteDifference = calculateAbsoluteDifference(metricValue, previousRecord.value);
+                }
+                activity[getDateStringFromTimestamp(file.stat.mtime)] = (activity[getDateStringFromTimestamp(file.stat.mtime)] || 0) + absoluteDifference;
+            }
+        } catch (error) {
+            console.error(`Error calculating ${metricName} for file ${file.path}:`, error);
+        }
+
+        return { checkpoint, activity };
+    }
 }
