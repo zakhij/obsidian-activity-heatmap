@@ -1,4 +1,4 @@
-import type { ActivityOverTimeData, DateActivityMetrics, FileCheckpointMetrics, MetricType } from './types'
+import type { ActivityOverTimeData, DateActivityMetrics, FileCheckpointData, FileCheckpointMetrics, MetricType } from './types'
 import type ActivityHeatmapPlugin from './main'
 import type { TFile } from 'obsidian';
 import { calculateAbsoluteDifference, getDateStringFromTimestamp } from './utils';
@@ -64,9 +64,9 @@ export class MetricManager {
         fileCheckpointMetrics: FileCheckpointMetrics | null, 
         activityOverTime: ActivityOverTimeData, 
         isFirstTime: boolean
-    ): Promise<{ newFileCheckpointMetrics: FileCheckpointMetrics; activityOverTime: ActivityOverTimeData}> {
+    ): Promise<{ newFileCheckpointMetrics: FileCheckpointData; activityOverTime: ActivityOverTimeData}> {
         
-        const newFileCheckpointMetrics = {} as FileCheckpointMetrics;
+        const newFileCheckpointMetrics = {} as FileCheckpointData;
         newFileCheckpointMetrics.mtime = file.stat.mtime;
 
         for (const metricType of METRIC_TYPES) {
@@ -91,7 +91,6 @@ export class MetricManager {
 
                 const previousValue = fileCheckpointMetrics?.[metricType];
                 const absoluteDifference = calculateAbsoluteDifference(metricValue, previousValue);
-                console.log("Updating activity over time for", metricType, "by", absoluteDifference, "for date", dateString);
                 activityOverTime[dateString][metricType] += absoluteDifference;
             }
         }

@@ -112,11 +112,9 @@ export class ActivityHeatmapDataManager {
 
         if (isFirstTime) {
             if (!loadedData) {
-                console.log("First time update. Returning empty data.");
                 return this.getEmptyActivityHeatmapData();
             }
             else {
-                console.log("First time update: Returning loaded data.");
                 return { version: loadedData.version, 
                     checkpoints: loadedData.checkpoints, 
                     activityOverTime: loadedData.activityOverTime } as ActivityHeatmapData;
@@ -130,19 +128,16 @@ export class ActivityHeatmapDataManager {
 
         // If version does not exist or is behind the current version, return null.
         if (!loadedData.version || loadedData.version < this.plugin.manifest.version) {
-            console.log("Version invalid. Returning null.");
             return null;
         }
 
         // If activity is not in the expected format, return null.
         if (!isActivityOverTimeData(loadedData.activityOverTime)) {
-            console.log("Activity over time invalid. Returning null.");
             return null;
         }
 
         // If checkpoints are not in the expected format, return null.
         if (!isCheckpointData(loadedData.checkpoints)) {
-            console.log("Checkpoints invalid. Returning null.");
             return null;
         }
 

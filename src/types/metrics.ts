@@ -4,16 +4,15 @@ export type FilePath = string;
 export type DateString = string; // Format: YYYY-MM-DD
 export type MetricType = typeof METRIC_TYPES[number];
 
-export interface FileCheckpointMetrics extends Record<MetricType, number> {
+export type FileCheckpointMetrics = Record<MetricType, number>;
+
+export interface FileCheckpointData extends FileCheckpointMetrics {
     mtime: number;
 }
 
-export type CheckpointData = Record<FilePath, FileCheckpointMetrics>;
-
-export type HeatmapActivityData = Record<DateString, number>;
+export type CheckpointData = Record<FilePath, FileCheckpointData>;
 
 export type DateActivityMetrics = Record<MetricType, number>;
-
 export type ActivityOverTimeData = Record<DateString, DateActivityMetrics>;
 
 export interface ActivityHeatmapData {
@@ -21,3 +20,5 @@ export interface ActivityHeatmapData {
     checkpoints: CheckpointData;
     activityOverTime: ActivityOverTimeData;
 }
+
+export type HeatmapActivityData = Record<DateString, number>;

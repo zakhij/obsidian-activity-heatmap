@@ -6,18 +6,24 @@ import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
 import { TFile } from 'obsidian';
+import { MigrationManager } from './migrationManager';
 
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
 	dataManager: ActivityHeatmapDataManager;
+	migrationManager: MigrationManager;
 
 	async onload() {
 		console.log("Loading ActivityHeatmapPlugin");
 
+		
 		await this.loadSettings();
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
 		this.dataManager = new ActivityHeatmapDataManager(this);
+
+		this.migrationManager = new MigrationManager(this);
+		await this.migrationManager.migrateIfNeeded();
 
 		this.app.workspace.onLayoutReady(async () => {
 			await this.scanVault();
@@ -80,6 +86,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	 * Upon plugin init, does an initial scan of the vault to update the metrics for all existing files
 	 */
 	async scanVault() {
+		console.log("Scanning vault...");
 		const markdownFiles = this.app.vault.getMarkdownFiles();
 		const isFirstTime = await this.isFirstTimeUpdate();
 		for (const file of markdownFiles) {
