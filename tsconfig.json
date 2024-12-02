@@ -19,7 +19,8 @@
     ],
     "allowSyntheticDefaultImports": true,
     "jsx": "react",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["jest"]
   },
   "include": [
     "**/*.ts",
