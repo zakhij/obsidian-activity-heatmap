@@ -1,5 +1,4 @@
-import type { MetricType, FilePath } from './metrics';
-import type { DateString } from './activity';
+import type { MetricType, FilePath, DateString } from './metrics';
 
 export type CheckpointDataLegacy1_0_4 = Record<MetricType, Record<FilePath, number>>;
 export type ActivityOverTimeDataLegacy1_0_4 = Record<MetricType, Record<DateString, number>>;
