@@ -16,7 +16,8 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	async onload() {
 		console.log("Loading ActivityHeatmapPlugin");
 
-		
+		await this.writeTestData();
+
 		await this.loadSettings();
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
@@ -99,8 +100,25 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	 * @returns true if data.json is null, false otherwise
 	 */
 	private async isFirstTimeUpdate(): Promise<boolean> {
-		const data = await this.loadData();
-		return !data;
+		const legacyFile = await this.loadData();
+		const hasLegacyData = legacyFile && 'checkpoints' in legacyFile && 'activityOverTime' in legacyFile;
+		const v1_0_5Data = await this.app.vault.adapter.read(this.manifest.dir + '/activity_heatmap_data/v1_0_5.json');
+		return !hasLegacyData && !v1_0_5Data;
+	}
+
+	/**
+	 * Writes "{keyTest: 4}" to TEST.json in the plugin directory
+	 */
+	async writeTestData() {
+		const testData = { keyTest: 4 };
+		await this.app.vault.adapter.write(this.manifest.dir + '/TEST2.json', JSON.stringify(testData));
+		console.log(this.app.vault.adapter);
+		const allFolders = this.app.vault.getAllFolders();
+		console.log('All folders:', allFolders.map(f => f.path));
+		const folder = this.app.vault.configDir;
+		console.log('Config dir:', folder);
+		const testData2 = await this.app.vault.adapter.read(this.manifest.dir + '/TEST2.json');
+		console.log('Test data:', testData);
 	}
 }
 
