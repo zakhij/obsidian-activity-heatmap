@@ -16,7 +16,6 @@ export type DateActivityMetrics = Record<MetricType, number>;
 export type ActivityOverTimeData = Record<DateString, DateActivityMetrics>;
 
 export interface ActivityHeatmapData {
-    version: string;
     checkpoints: CheckpointData;
     activityOverTime: ActivityOverTimeData;
 }
