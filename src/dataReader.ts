@@ -1,7 +1,7 @@
 import { DEV_BUILD } from "./config";
 import ActivityHeatmapPlugin from "./main";
-import { ActivityHeatmapData, ActivityOverTimeData, ActivityOverTimeDataLegacy1_0_4, CheckpointData, DateActivityMetrics, HeatmapActivityData, MetricType } from "./types";
-import { createMockData, getEmptyActivityHeatmapData, isActivityOverTimeData, isActivityOverTimeDataLegacy1_0_4 } from "./utils";
+import { ActivityHeatmapData, DateString, HeatmapActivityData, MetricType } from "./types";
+import { createMockData, isActivityOverTimeData, isActivityOverTimeDataLegacy1_0_4 } from "./utils";
 
 export class dataReader {
     constructor(private plugin: ActivityHeatmapPlugin) {
@@ -9,81 +9,63 @@ export class dataReader {
     }
 
     async getActivityDataForHeatmap(metricType: MetricType): Promise<HeatmapActivityData> {
-        if (DEV_BUILD && this.plugin.settings.useMockData) {
-            console.log("Using mock data");
+        if (DEV_BUILD) {
             return createMockData();
         }
-        let activityData = await this.validateActivityOverTimeData();
-        if (!activityData) {
-            activityData = getEmptyActivityHeatmapData().activityOverTime;
-        }
-        const transformedData: HeatmapActivityData = {};
-        Object.entries(activityData).forEach(([date, metrics]) => {
-            if (metrics[metricType]) {
-                transformedData[date] = metrics[metricType];
-            }
-        });
-        
-        return transformedData;
+
+        const dataSources = [
+            await this.getV1_0_5Data(metricType),
+            await this.getV1_0_4Data(metricType)
+        ];
+
+        return dataSources
+            .filter((source): source is HeatmapActivityData => source !== null)
+            .reduce((merged, current) => this.mergeActivityData(merged, current), 
+                this.getEmptyHeatmapActivityData());
     }
 
-    async validateActivityOverTimeData(): Promise<ActivityOverTimeData | null> {
-        const legacyFile = await this.plugin.loadData();
-        const hasLegacyData = legacyFile && 'activityOverTime' in legacyFile;
-        let v1_0_5Data: ActivityHeatmapData | null = null;
-        try {
-            v1_0_5Data = await this.plugin.app.vault.adapter.read(
-                this.plugin.manifest.dir + '/activity_heatmap_data/v1_0_5.json'
-            ).then(data => JSON.parse(data));
-        } catch (error) {
-        }
+    private mergeActivityData(base: HeatmapActivityData, overlay: HeatmapActivityData): HeatmapActivityData {
+        const result = { ...base };
+        Object.entries(overlay).forEach(([date, value]) => {
+            result[date] = (result[date] || 0) + value;
+        });
+        return result;
+    }
 
-        let combinedData: ActivityOverTimeData = {};
-        
-        if (v1_0_5Data) {
-            if (!isActivityOverTimeData(v1_0_5Data.activityOverTime)) {
+    private getEmptyHeatmapActivityData(): HeatmapActivityData {
+        return {} as Record<DateString, number>;
+    }
+
+
+    private async getV1_0_5Data(metricType: MetricType): Promise<HeatmapActivityData | null> {
+        try {
+            const data = await this.plugin.app.vault.adapter.read(
+                this.plugin.manifest.dir + '/activity_heatmap_data/v1_0_5.json'
+            ).then(data => JSON.parse(data)) as ActivityHeatmapData;
+
+            if (!isActivityOverTimeData(data.activityOverTime)) {
                 console.error("v1_0_5 activity over time data is not in the expected format!");
                 return null;
             }
-            combinedData = v1_0_5Data.activityOverTime;
-        }
 
-        if (hasLegacyData) {
-            if (!isActivityOverTimeDataLegacy1_0_4(legacyFile.activityOverTime)) {
-                console.error("Legacy activity over time data is not in the expected format!");
-                return null;
-            }
-            const legacyConverted = await this.convertActivityOverTimeDataLegacyToV1_0_5(legacyFile.activityOverTime);
-            Object.entries(legacyConverted).forEach(([date, legacyMetrics]) => {
-                if (combinedData[date]) {
-                    Object.keys(legacyMetrics).forEach((metricType: MetricType) => {
-                        combinedData[date][metricType] = 
-                            (combinedData[date][metricType] || 0) + 
-                            (legacyMetrics[metricType] || 0);
-                    });
-                } else {
-                    combinedData[date] = legacyMetrics;
+            const transformedData: HeatmapActivityData = {};
+            Object.entries(data.activityOverTime).forEach(([date, metrics]) => {
+                if (metrics[metricType]) {
+                    transformedData[date] = metrics[metricType];
                 }
             });
+            return transformedData;
+        } catch (error) {
+            return null;
         }
-        return combinedData;
     }
 
-    async convertActivityOverTimeDataLegacyToV1_0_5(legacyData: ActivityOverTimeDataLegacy1_0_4): Promise<ActivityOverTimeData> {
-        const newData: ActivityOverTimeData = {};
-        const allDates = new Set<string>();
-        Object.values(legacyData).forEach(metricData => {
-            Object.keys(metricData).forEach(date => allDates.add(date));
-        });
-        
-        allDates.forEach(date => {
-            newData[date] = {} as DateActivityMetrics;
-            Object.entries(legacyData).forEach(([metricType, metricData]) => {
-                newData[date][metricType as MetricType] = metricData[date] || 0;
-            });
-        });
-        
-        return newData;
+    private async getV1_0_4Data(metricType: MetricType): Promise<HeatmapActivityData | null> {
+        const legacyFile = await this.plugin.loadData();
+        if (!legacyFile || !('activityOverTime' in legacyFile) || !isActivityOverTimeDataLegacy1_0_4(legacyFile.activityOverTime)) {
+            return null;
+        }
+        return legacyFile.activityOverTime[metricType];
     }
 
 }
