@@ -4,9 +4,21 @@ import type {
     ActivityOverTimeData,
     CheckpointDataLegacy1_0_4,
     ActivityOverTimeDataLegacy1_0_4,
-    MetricType
+    MetricType,
+    ActivityHeatmapData
 } from '../types/'
 
+
+/**
+     * Constructs an empty activity heatmap data structure.
+     * @returns An empty activity heatmap data structure.
+     */
+export function getEmptyActivityHeatmapData(): ActivityHeatmapData {
+    return {
+        checkpoints: {} as CheckpointData,
+        activityOverTime: {} as ActivityOverTimeData
+    };
+}
 
 /**
  * Type guard for CheckpointData (Record<FilePath, FileMetrics>)

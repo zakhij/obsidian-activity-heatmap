@@ -1,30 +1,26 @@
 import { Plugin } from 'obsidian';
-import type { ActivityHeatmapSettings } from './types'
+import type { ActivityHeatmapData, ActivityHeatmapSettings } from './types'
 import { ActivityHeatmapDataManager } from './dataManager'
 import { DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
 import { TFile } from 'obsidian';
-import { MigrationManager } from './migrationManager';
-
+import { DataUpdater } from './dataUpdater';
+import { dataReader } from './dataReader';
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
-	dataManager: ActivityHeatmapDataManager;
-	migrationManager: MigrationManager;
+	dataUpdater: DataUpdater;
+	dataReader: dataReader;
 
 	async onload() {
 		console.log("Loading ActivityHeatmapPlugin");
 
-		await this.writeTestData();
-
 		await this.loadSettings();
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
-		this.dataManager = new ActivityHeatmapDataManager(this);
-
-		this.migrationManager = new MigrationManager(this);
-		await this.migrationManager.migrateIfNeeded();
+		this.dataUpdater = new DataUpdater(this);
+		this.dataReader = new dataReader(this);
 
 		this.app.workspace.onLayoutReady(async () => {
 			await this.scanVault();
@@ -33,7 +29,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('modify', (file) => {
 				if (file instanceof TFile && file.extension === 'md') {
-					this.dataManager.updateFileData(file, false);
+					this.dataUpdater.updateFileData(file, false);
 				}
 			})
 		);
@@ -41,7 +37,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('delete', (file) => {
 				if (file instanceof TFile && file.extension === 'md') {
-					this.dataManager.removeFileData(file);
+					this.dataUpdater.removeFileData(file);
 				}
 			})
 		);
@@ -91,7 +87,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		const markdownFiles = this.app.vault.getMarkdownFiles();
 		const isFirstTime = await this.isFirstTimeUpdate();
 		for (const file of markdownFiles) {
-			await this.dataManager.updateFileData(file, isFirstTime);
+			await this.dataUpdater.updateFileData(file, isFirstTime);
 		}
 	}
 
@@ -102,7 +98,12 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	private async isFirstTimeUpdate(): Promise<boolean> {
 		const legacyFile = await this.loadData();
 		const hasLegacyData = legacyFile && 'checkpoints' in legacyFile && 'activityOverTime' in legacyFile;
-		const v1_0_5Data = await this.app.vault.adapter.read(this.manifest.dir + '/activity_heatmap_data/v1_0_5.json');
+		let v1_0_5Data: ActivityHeatmapData | null = null;
+		try {
+			v1_0_5Data = await this.app.vault.adapter.read(this.manifest.dir + '/activity_heatmap_data/v1_0_5.json').then(data => JSON.parse(data));
+		} catch (error) {
+
+		}
 		return !hasLegacyData && !v1_0_5Data;
 	}
 
@@ -112,13 +113,8 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	async writeTestData() {
 		const testData = { keyTest: 4 };
 		await this.app.vault.adapter.write(this.manifest.dir + '/TEST2.json', JSON.stringify(testData));
-		console.log(this.app.vault.adapter);
-		const allFolders = this.app.vault.getAllFolders();
-		console.log('All folders:', allFolders.map(f => f.path));
-		const folder = this.app.vault.configDir;
-		console.log('Config dir:', folder);
 		const testData2 = await this.app.vault.adapter.read(this.manifest.dir + '/TEST2.json');
-		console.log('Test data:', testData);
+		console.log('Test data:', testData2);
 	}
 }
 
