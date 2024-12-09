@@ -106,15 +106,6 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		return !hasLegacyData && !v1_0_5Data;
 	}
 
-	/**
-	 * Writes "{keyTest: 4}" to TEST.json in the plugin directory
-	 */
-	async writeTestData() {
-		const testData = { keyTest: 4 };
-		await this.app.vault.adapter.write(this.manifest.dir + '/TEST2.json', JSON.stringify(testData));
-		const testData2 = await this.app.vault.adapter.read(this.manifest.dir + '/TEST2.json');
-		console.log('Test data:', testData2);
-	}
 }
 
 
