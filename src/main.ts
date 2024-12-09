@@ -1,7 +1,6 @@
 import { Plugin } from 'obsidian';
 import type { ActivityHeatmapData, ActivityHeatmapSettings } from './types'
-import { ActivityHeatmapDataManager } from './dataManager'
-import { DEFAULT_SETTINGS } from './constants'
+import { CURRENT_DATA_FILE, DATA_FOLDER, DEFAULT_SETTINGS } from './constants'
 import { ActivityHeatmapSettingTab } from './settings'
 import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
@@ -100,7 +99,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		const hasLegacyData = legacyFile && 'checkpoints' in legacyFile && 'activityOverTime' in legacyFile;
 		let v1_0_5Data: ActivityHeatmapData | null = null;
 		try {
-			v1_0_5Data = await this.app.vault.adapter.read(this.manifest.dir + '/activity_heatmap_data/v1_0_5.json').then(data => JSON.parse(data));
+			v1_0_5Data = await this.app.vault.adapter.read(this.manifest.dir + '/' + DATA_FOLDER + '/' + CURRENT_DATA_FILE).then(data => JSON.parse(data));
 		} catch (error) {
 
 		}

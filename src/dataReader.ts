@@ -1,4 +1,6 @@
 import { DEV_BUILD } from "./config";
+import { CURRENT_DATA_FILE, CURRENT_DATA_VERSION, DATA_FOLDER } from "./constants";
+import { LEGACY_DATA_VERSIONS } from "./constants";
 import ActivityHeatmapPlugin from "./main";
 import { ActivityHeatmapData, DateString, HeatmapActivityData, MetricType } from "./types";
 import { createMockData, isActivityOverTimeData, isActivityOverTimeDataLegacy1_0_4 } from "./utils";
@@ -13,15 +15,29 @@ export class dataReader {
             return createMockData();
         }
 
-        const dataSources = [
-            await this.getV1_0_5Data(metricType),
-            await this.getV1_0_4Data(metricType)
-        ];
+        const dataSources = await this.getDataSources(metricType);
 
         return dataSources
             .filter((source): source is HeatmapActivityData => source !== null)
             .reduce((merged, current) => this.mergeActivityData(merged, current), 
                 this.getEmptyHeatmapActivityData());
+    }
+
+    private async getDataSources(metricType: MetricType): Promise<HeatmapActivityData[]> {
+        const allVersions = LEGACY_DATA_VERSIONS.concat(CURRENT_DATA_VERSION);
+        const dataSources = await Promise.all(allVersions.map(version => this.getDataForVersion(version, metricType)));
+        return dataSources.filter((source): source is HeatmapActivityData => source !== null);
+    }
+
+    private async getDataForVersion(version: string, metricType: MetricType): Promise<HeatmapActivityData | null> {
+        switch (version) {
+            case CURRENT_DATA_VERSION:
+                return await this.getCurrentData(metricType);
+            case '1.0.4':
+                return await this.getV1_0_4Data(metricType);
+            default:
+                return null;
+        }
     }
 
     private mergeActivityData(base: HeatmapActivityData, overlay: HeatmapActivityData): HeatmapActivityData {
@@ -37,14 +53,14 @@ export class dataReader {
     }
 
 
-    private async getV1_0_5Data(metricType: MetricType): Promise<HeatmapActivityData | null> {
+    private async getCurrentData(metricType: MetricType): Promise<HeatmapActivityData | null> {
         try {
             const data = await this.plugin.app.vault.adapter.read(
-                this.plugin.manifest.dir + '/activity_heatmap_data/v1_0_5.json'
+                this.plugin.manifest.dir + "/" + DATA_FOLDER + "/" + CURRENT_DATA_FILE
             ).then(data => JSON.parse(data)) as ActivityHeatmapData;
 
             if (!isActivityOverTimeData(data.activityOverTime)) {
-                console.error("v1_0_5 activity over time data is not in the expected format!");
+                console.error("Current activity over time data is not in the expected format!");
                 return null;
             }
 
