@@ -2,10 +2,12 @@ import { METRIC_TYPES } from '../constants';
 import type { 
     CheckpointData, 
     ActivityOverTimeData,
-    CheckpointDataLegacy1_0_4,
-    ActivityOverTimeDataLegacy1_0_4,
-    MetricType
+    MetricType,
+    CheckpointDataSchemaV0,
+    ActivityOverTimeDataSchemaV0,
 } from '../types/'
+
+
 
 
 /**
@@ -48,9 +50,9 @@ export function isActivityOverTimeData(data: any): data is ActivityOverTimeData 
 
 
 /**
- * Type guard for CheckpointDataLegacy1_0_4 (Record<MetricType, Record<FilePath, number>>)
+ * Type guard for CheckpointDataSchemaV0 (Record<MetricType, Record<FilePath, number>>)
  */
-export function isCheckpointDataLegacy1_0_4(data: any): data is CheckpointDataLegacy1_0_4 {
+export function isCheckpointDataSchemaV0(data: any): data is CheckpointDataSchemaV0 {
     if (typeof data !== 'object' || data === null) return false;
     
     return Object.entries(data).every(([metric, dateValues]) => 
@@ -64,9 +66,9 @@ export function isCheckpointDataLegacy1_0_4(data: any): data is CheckpointDataLe
 }
 
 /**
- * Type guard for ActivityOverTimeDataLegacy1_0_4 (Record<MetricType, Record<DateString, number>>)
+ * Type guard for ActivityOverTimeDataLegacyV0 (Record<MetricType, Record<DateString, number>>)
  */
-export function isActivityOverTimeDataLegacy1_0_4(data: any): data is ActivityOverTimeDataLegacy1_0_4 {
+export function isActivityOverTimeDataSchemaV0(data: any): data is ActivityOverTimeDataSchemaV0 {
     if (typeof data !== 'object' || data === null) return false;
     
     return Object.entries(data).every(([metric, dateValues]) => 
