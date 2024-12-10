@@ -1,9 +1,9 @@
 import { DEV_BUILD } from "./config";
-import { CURRENT_DATA_FILE, CURRENT_DATA_VERSION, DATA_FOLDER } from "./constants";
-import { LEGACY_DATA_VERSIONS } from "./constants";
+import { CURRENT_DATA_FILE, CURRENT_DATA_SCHEMA, DATA_FOLDER } from "./constants";
+import { LEGACY_DATA_SCHEMAS } from "./constants";
 import ActivityHeatmapPlugin from "./main";
 import { ActivityHeatmapData, DateString, HeatmapActivityData, MetricType } from "./types";
-import { createMockData, isActivityOverTimeData, isActivityOverTimeDataLegacyDataV0 } from "./utils";
+import { createMockData, isActivityOverTimeData, isActivityOverTimeDataSchemaV0 } from "./utils";
 
 export class DataReader {
     constructor(private plugin: ActivityHeatmapPlugin) {
@@ -32,7 +32,7 @@ export class DataReader {
      * @returns Array of data sources (HeatmapActivityData).
      */
     private async getDataSources(metricType: MetricType): Promise<HeatmapActivityData[]> {
-        const dataSources = await Promise.all([CURRENT_DATA_VERSION, ...LEGACY_DATA_VERSIONS].map(version => this.getDataForVersion(version, metricType)));
+        const dataSources = await Promise.all([CURRENT_DATA_SCHEMA, ...LEGACY_DATA_SCHEMAS].map(schema_version => this.getDataForSchemaVersion(schema_version, metricType)));
         return dataSources.filter((source): source is HeatmapActivityData => source !== null);
     }
 
@@ -42,12 +42,12 @@ export class DataReader {
      * @param metricType - The type of metric to get data for.
      * @returns Heatmap activity data (KV pair of date: activityOverTime metric value), or null if the data is not found or in an unexpected format.
      */
-    private async getDataForVersion(version: string, metricType: MetricType): Promise<HeatmapActivityData | null> {
-        switch (version) {
-            case CURRENT_DATA_VERSION:
-                return await this.getCurrentData(metricType);
+    private async getDataForSchemaVersion(schema_version: string, metricType: MetricType): Promise<HeatmapActivityData | null> {
+        switch (schema_version) {
+            case CURRENT_DATA_SCHEMA:
+                return await this.getDataForCurrentSchema(metricType);
             case 'V0':
-                return await this.getV0Data(metricType);
+                return await this.getDataForSchemaV0(metricType);
             default:
                 return null;
         }
@@ -81,7 +81,7 @@ export class DataReader {
      * @param metricType - The type of metric to get data for.
      * @returns Heatmap activity data (KV pair of date: activityOverTime metric value), or null if the data is not found or in an unexpected format.
      */
-    private async getCurrentData(metricType: MetricType): Promise<HeatmapActivityData | null> {
+    private async getDataForCurrentSchema(metricType: MetricType): Promise<HeatmapActivityData | null> {
         try {
             const data = await this.plugin.app.vault.adapter.read(
                 this.plugin.manifest.dir + "/" + DATA_FOLDER + "/" + CURRENT_DATA_FILE
@@ -109,9 +109,9 @@ export class DataReader {
      * @param metricType - The type of metric to get data for.
      * @returns Heatmap activity data (KV pair of date: activityOverTime metric value), or null if the data is not found or in an unexpected format.
      */
-    private async getV0Data(metricType: MetricType): Promise<HeatmapActivityData | null> {
+    private async getDataForSchemaV0(metricType: MetricType): Promise<HeatmapActivityData | null> {
         const legacyFile = await this.plugin.loadData();
-        if (!legacyFile || !('activityOverTime' in legacyFile) || !isActivityOverTimeDataLegacyDataV0(legacyFile.activityOverTime)) {
+        if (!legacyFile || !('activityOverTime' in legacyFile) || !isActivityOverTimeDataSchemaV0(legacyFile.activityOverTime)) {
             return null;
         }
         return legacyFile.activityOverTime[metricType];
