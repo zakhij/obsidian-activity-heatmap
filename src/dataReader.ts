@@ -5,7 +5,7 @@ import ActivityHeatmapPlugin from "./main";
 import { ActivityHeatmapData, DateString, HeatmapActivityData, MetricType } from "./types";
 import { createMockData, isActivityOverTimeData, isActivityOverTimeDataLegacy1_0_4 } from "./utils";
 
-export class dataReader {
+export class DataReader {
     constructor(private plugin: ActivityHeatmapPlugin) {
         this.plugin = plugin;
     }

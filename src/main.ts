@@ -6,11 +6,11 @@ import { HeatmapModal } from './components/heatmapModal';
 import { DEV_BUILD } from './config';
 import { TFile } from 'obsidian';
 import { DataUpdater } from './dataUpdater';
-import { dataReader } from './dataReader';
+import { DataReader } from './dataReader';
 export default class ActivityHeatmapPlugin extends Plugin {
 	settings: ActivityHeatmapSettings;
 	dataUpdater: DataUpdater;
-	dataReader: dataReader;
+	dataReader: DataReader;
 
 	async onload() {
 		console.log("Loading ActivityHeatmapPlugin");
@@ -19,7 +19,7 @@ export default class ActivityHeatmapPlugin extends Plugin {
 		this.addSettingTab(new ActivityHeatmapSettingTab(this.app, this));
 
 		this.dataUpdater = new DataUpdater(this);
-		this.dataReader = new dataReader(this);
+		this.dataReader = new DataReader(this);
 
 		this.app.workspace.onLayoutReady(async () => {
 			await this.scanVault();
