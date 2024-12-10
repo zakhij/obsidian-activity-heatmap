@@ -91,19 +91,19 @@ export default class ActivityHeatmapPlugin extends Plugin {
 	}
 
 	/**
-	 * Checks if data.json is null (which we assume indicates first-time plugin user)
-	 * @returns true if data.json is null, false otherwise
+	 * Checks if data files (both current and legacy) are null (which we assume indicates first-time plugin user)
+	 * @returns true if data is null, false otherwise
 	 */
 	private async isFirstTimeUpdate(): Promise<boolean> {
-		const legacyFile = await this.loadData();
-		const hasLegacyData = legacyFile && 'checkpoints' in legacyFile && 'activityOverTime' in legacyFile;
-		let v1_0_5Data: ActivityHeatmapData | null = null;
+		const dataV0 = await this.loadData();
+		const hasDataV0 = dataV0 && 'checkpoints' in dataV0 && 'activityOverTime' in dataV0;
+		let dataV1: ActivityHeatmapData | null = null;
 		try {
-			v1_0_5Data = await this.app.vault.adapter.read(this.manifest.dir + '/' + DATA_FOLDER + '/' + CURRENT_DATA_FILE).then(data => JSON.parse(data));
+			dataV1 = await this.app.vault.adapter.read(this.manifest.dir + '/' + DATA_FOLDER + '/' + CURRENT_DATA_FILE).then(data => JSON.parse(data));
 		} catch (error) {
-
+			// Continue, dataV1 will be null
 		}
-		return !hasLegacyData && !v1_0_5Data;
+		return !hasDataV0 && !dataV1;
 	}
 
 }
