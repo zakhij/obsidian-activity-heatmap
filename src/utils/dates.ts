@@ -1,4 +1,3 @@
-import type { DateString } from '../types/';
 
 /**
  * Calculates the start date and range based on the selected year.
@@ -22,19 +21,22 @@ export function calculateDateRange(year: string) {
 
 
 /**
- * Gets the current date in ISO format (YYYY-MM-DD).
- * @returns The current date as a string.
+ * Gets the timezone offset in minutes for the current system
+ * @returns The timezone offset in minutes
  */
-export function getCurrentDate(): string {
-    return new Date().toISOString().split('T')[0];
-}
+const getSystemTimezoneOffset = (): number => {
+    return new Date().getTimezoneOffset();
+};
 
 /**
- * Converts a timestamp to a date string.
+ * Converts a timestamp to a date string, accounting for system timezone.
  * @param timestamp - The timestamp to convert.
- * @returns The date string.
+ * @returns The date string in YYYY-MM-DD format for the local timezone.
  */
 export function getDateStringFromTimestamp(timestamp: number): string {
-    return new Date(timestamp).toISOString().split('T')[0];
+    const date = new Date(timestamp);
+    const localDate = new Date(date.getTime() - (getSystemTimezoneOffset() * 60000));
+    return localDate.toISOString().split('T')[0];
 }
+
 
