@@ -5,6 +5,8 @@ import type {
     MetricType,
     CheckpointDataSchemaV0,
     ActivityOverTimeDataSchemaV0,
+    FileCheckpointMetrics,
+    FileCheckpointData,
 } from '../types/'
 
 
@@ -21,7 +23,7 @@ export function isCheckpointData(data: any): data is CheckpointData {
         typeof metrics === 'object' &&
         metrics !== null &&
         'mtime' in metrics &&
-        typeof metrics.mtime === 'number' &&
+        typeof (metrics as FileCheckpointData).mtime === 'number' &&
         METRIC_TYPES.every(metricType =>
             metricType in metrics &&              
             typeof metrics[metricType] === 'number' 
