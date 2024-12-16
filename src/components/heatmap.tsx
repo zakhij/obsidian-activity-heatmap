@@ -4,7 +4,7 @@ import Tooltip from 'cal-heatmap/plugins/Tooltip';
 import 'cal-heatmap/cal-heatmap.css';
 // @ts-ignore
 import LegendLite from 'cal-heatmap/plugins/LegendLite';
-import { ActivityData, MetricType } from '../types';
+import { HeatmapActivityData, MetricType } from '../types';
 import React, { useEffect, useRef, memo } from "react";
 import { 
     convertDataToArray, 
@@ -15,7 +15,7 @@ import {
 } from '../utils';
 
 interface HeatmapProps {
-    data: ActivityData;
+    data: HeatmapActivityData;
     metricType: MetricType;
     year: string;
 }

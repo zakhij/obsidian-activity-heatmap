@@ -55,7 +55,7 @@ export class HeatmapModal extends Modal {
             .addDropdown(async (dropdown) => {
                 dropdown.addOption('Past year', 'Past year');
 
-                const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.metricType);
+                const data = await this.plugin.dataReader.getActivityDataForHeatmap(this.plugin.settings.metricType);
 
                 const years = Object.keys(data)
                     .map(date => new Date(date).getFullYear())
@@ -85,7 +85,7 @@ export class HeatmapModal extends Modal {
      * Renders the heatmap component.
      */
     async renderHeatmap() {
-        const data = await this.plugin.dataManager.getActivityHeatmapData(this.plugin.settings.metricType);
+        const data = await this.plugin.dataReader.getActivityDataForHeatmap(this.plugin.settings.metricType);
         const { metricType, year } = this.plugin.settings;
         this.root.render(
             <Heatmap 
